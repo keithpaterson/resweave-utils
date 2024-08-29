@@ -1,4 +1,4 @@
-module github.com/keithpaterson/reswutils
+module github.com/keithpaterson/resweave-utils
 
 go 1.22.5
 
