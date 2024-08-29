@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"reswutils/header"
+	"github.com/keithpaterson/resweave-utils/header"
 )
 
 // Errors

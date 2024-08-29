@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"webkins/site/pkg/logging"
+	"github.com/keithpaterson/resweave-utils/logging"
 
 	"github.com/agilitree/resweave"
 	"go.uber.org/zap"

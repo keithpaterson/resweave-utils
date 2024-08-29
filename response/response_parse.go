@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"reswutils/utility/rw"
+	"github.com/keithpaterson/resweave-utils/utility/rw"
 )
 
 var (

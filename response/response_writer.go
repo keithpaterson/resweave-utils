@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"reswutils/header"
+	"github.com/keithpaterson/resweave-utils/header"
 )
 
 type Writer struct {
