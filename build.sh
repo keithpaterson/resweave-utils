@@ -29,9 +29,9 @@ _unit_tests() {
   echo "Running unit tests..."
   mkdir -p ${_test_report_dir}
   _test_check_and_install_ginkgo
-  ginkgo --tags testutils --repeat 1 -r --output-dir .reports --json-report unit_tests.json ./... > .reports/unit_tests.log 2>&1
+  ginkgo --tags testutils --repeat 1 -r --output-dir ${_test_report_dir} --json-report unit_tests.json ./... > ${_test_report_dir}/unit_tests.log 2>&1
   local _result=$?
-  cat .reports/unit_tests.log
+  cat ${_test_report_dir}/unit_tests.log
   if [ ${_result} -ne 0 ]; then
       exit ${_result}
   fi
@@ -40,13 +40,13 @@ _unit_tests() {
 _unit_coverage() {
     echo "generating test coverage..."
     mkdir -p ${_test_report_dir}
-    rm -f .reports/coverage.raw.out .reports/coverage.out
-    go test --tags testutils --test.coverprofile .reports/coverage.raw.out ./... | grep -v mocks 
+    rm -f ${_test_report_dir}/coverage.raw.out ${_test_report_dir}/coverage.out
+    go test --tags testutils --test.coverprofile ${_test_report_dir}/coverage.raw.out ./... | grep -v mocks 
     local _result=$?
 
     # filter out mocks directories from coverage
-    grep -vE 'mocks/|utility/test/' .reports/coverage.raw.out > .reports/coverage.out
-    go tool cover -html=.reports/coverage.out -o .reports/coverage.html
+    grep -vE 'mocks/|utility/test/' ${_test_report_dir}/coverage.raw.out > ${_test_report_dir}/coverage.out
+    go tool cover -html=${_test_report_dir}/coverage.out -o ${_test_report_dir}/coverage.html
     if [ ${_result} -ne 0 ]; then
         exit ${_result}
     fi
