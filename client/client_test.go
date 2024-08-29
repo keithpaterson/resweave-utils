@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"reswutils/request"
 	"reswutils/response"
 	"reswutils/utility/test"
+
+	"github.com/resweave-resutils/reswutils/request"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
