@@ -1,4 +1,4 @@
-module reswutils
+module github.com/keithpaterson/reswutils
 
 go 1.22.5
 
