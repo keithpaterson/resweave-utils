@@ -7,8 +7,7 @@ import (
 	"math"
 	"net/http"
 
-	"reswutils/header"
-
+	"github.com/keithpaterson/resweave-utils/header"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"golang.org/x/text/cases"

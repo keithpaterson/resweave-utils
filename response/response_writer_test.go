@@ -6,8 +6,8 @@ import (
 	"math"
 	"net/http"
 
-	"reswutils/header"
-	"reswutils/mocks"
+	"github.com/keithpaterson/resweave-utils/header"
+	"github.com/keithpaterson/resweave-utils/mocks"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"

@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"webkins/service/pkg/header"
-	"webkins/service/pkg/response"
-	"webkins/service/pkg/utility/rw"
+	"github.com/keithpaterson/resweave-utils/header"
+	"github.com/keithpaterson/resweave-utils/response"
+	"github.com/keithpaterson/resweave-utils/utility/rw"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
