@@ -5,8 +5,9 @@ _root_dir=${_script_dir}
 _test_report_dir=${_root_dir}/.reports
 
 show_usage() {
-    echo "build.sh test"
+    echo "build.sh test [coverage]"
     echo "  runs all the tests"
+    echo "  'coverage' generates a code-coverage report"
 }
 
 run_tests() {
