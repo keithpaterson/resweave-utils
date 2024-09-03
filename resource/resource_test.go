@@ -61,11 +61,11 @@ var _ = Describe("Test EasyResource", func() {
 		DescribeTable("Defaults",
 			func(action resweave.ActionType, accept methodAcceptance) {
 				// Arrange
-				arh := NewResource("test", nil)
+				erh := NewResource("test", nil)
 
 				// Act && Assert
 				for key := range accept {
-					actual := arh.validateAcceptedMethods(action, key)
+					actual := erh.validateAcceptedMethods(action, key)
 					Expect(actual).To(Equal(accept[key]))
 				}
 			},
@@ -83,17 +83,17 @@ var _ = Describe("Test EasyResource", func() {
 		DescribeTable("Update Methods",
 			func(acceptPut bool, acceptPatch bool) {
 				// Arrange
-				arh := NewResource("test", nil)
+				erh := NewResource("test", nil)
 
 				// Act
-				arh.SetUpdateAcceptedMethods(acceptPut, acceptPatch)
+				erh.SetUpdateAcceptedMethods(acceptPut, acceptPatch)
 
 				// Assert
 				// expect no change if both put and patch are false.  Assumes 'true' is the default
 				expectPut := (!acceptPut && !acceptPatch) || acceptPut
 				expectPatch := (!acceptPut && !acceptPatch) || acceptPatch
-				Expect(arh.acceptedMethods[resweave.Update][http.MethodPut]).To(Equal(expectPut))
-				Expect(arh.acceptedMethods[resweave.Update][http.MethodPatch]).To(Equal(expectPatch))
+				Expect(erh.acceptedMethods[resweave.Update][http.MethodPut]).To(Equal(expectPut))
+				Expect(erh.acceptedMethods[resweave.Update][http.MethodPatch]).To(Equal(expectPatch))
 			},
 			Entry(nil, true, true),
 			Entry(nil, true, false),
@@ -102,39 +102,39 @@ var _ = Describe("Test EasyResource", func() {
 		)
 		It("should reset acceptance to defaults if set to nil", func() {
 			// Arrange
-			arh := NewResource("test", nil)
-			arh.SetUpdateAcceptedMethods(true, false)
+			erh := NewResource("test", nil)
+			erh.SetUpdateAcceptedMethods(true, false)
 
-			Expect(arh.acceptedMethods[resweave.Update]).To(Equal(methodAcceptance{http.MethodPatch: false, http.MethodPut: true}))
+			Expect(erh.acceptedMethods[resweave.Update]).To(Equal(methodAcceptance{http.MethodPatch: false, http.MethodPut: true}))
 
 			// Act
-			arh.setAcceptedMethods(resweave.Update, nil)
+			erh.setAcceptedMethods(resweave.Update, nil)
 
 			// Assert
-			Expect(arh.acceptedMethods[resweave.Update]).To(Equal(methodAcceptance{http.MethodPatch: true, http.MethodPut: true}))
+			Expect(erh.acceptedMethods[resweave.Update]).To(Equal(methodAcceptance{http.MethodPatch: true, http.MethodPut: true}))
 		})
 	})
 
 	Context("EasyResourceHandler", func() {
 		var (
-			arh *EasyResourceHandler
+			erh *EasyResourceHandler
 		)
 		BeforeEach(func() {
-			arh = NewResource("test", nil)
+			erh = NewResource("test", nil)
 		})
 
 		It("should return the correct name", func() {
-			Expect(arh.Name()).To(Equal(resweave.ResourceName("test")))
-			Expect(arh.Name()).To(Equal(arh.api.Name()))
+			Expect(erh.Name()).To(Equal(resweave.ResourceName("test")))
+			Expect(erh.Name()).To(Equal(erh.api.Name()))
 		})
 		DescribeTable("GetIDValue works properly",
 			func(key string, id string, expectID string, expectErr error) {
 				// Arrange
-				arh.SetID(resweave.NumericID)
+				erh.SetID(resweave.NumericID)
 				ctx := context.WithValue(context.TODO(), resweave.Key(key), id)
 
 				// Act
-				value, err := arh.GetIDValue(ctx)
+				value, err := erh.GetIDValue(ctx)
 
 				// Assert
 				if expectErr != nil {
@@ -181,14 +181,14 @@ var _ = Describe("Test EasyResource", func() {
 		var (
 			recorder *httptest.ResponseRecorder
 			ctx      context.Context
-			arh      *EasyResourceHandler // has no resource
+			erh      *EasyResourceHandler // has no resource
 			res      *EasyResourceHandler // is the test resource
 		)
 		BeforeEach(func() {
 			recorder = httptest.NewRecorder()
 			ctx = context.TODO()
 
-			arh = NewResource("test", nil)
+			erh = NewResource("test", nil)
 			res = newTestEasyResource()
 		})
 
@@ -197,7 +197,7 @@ var _ = Describe("Test EasyResource", func() {
 				// Arrange &&  Act
 				req, err := http.NewRequest(method, "test/", nil)
 				Expect(err).ToNot(HaveOccurred())
-				arh.handleResourceAction(at, ctx, recorder, req)
+				erh.handleResourceAction(at, ctx, recorder, req)
 
 				// Assert
 				resp := recorder.Result()

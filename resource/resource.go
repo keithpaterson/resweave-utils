@@ -66,7 +66,7 @@ type EasyResourceHandler struct {
 }
 
 func NewResource(name resweave.ResourceName, resource interface{}) *EasyResourceHandler {
-	arh := &EasyResourceHandler{
+	erh := &EasyResourceHandler{
 		LogHolder:       resweave.NewLogholder(name.String(), nil),
 		api:             resweave.NewAPI(name),
 		resource:        resource,
@@ -74,30 +74,30 @@ func NewResource(name resweave.ResourceName, resource interface{}) *EasyResource
 		validations:     make(validationFuncMap),
 	}
 	for id := range acceptedMethods {
-		arh.setAcceptedMethods(id, nil)
+		erh.setAcceptedMethods(id, nil)
 	}
 
 	if lh, ok := resource.(resweave.LogHolder); ok {
-		lh.SetLogger(arh.Logger(), false)
+		lh.SetLogger(erh.Logger(), false)
 	}
 
-	arh.api.SetHandler(arh.handleResourceAction)
+	erh.api.SetHandler(erh.handleResourceAction)
 
-	return arh
+	return erh
 }
 
 // resweave.APIResource functions that I am exposing as our own
 
-func (arh EasyResourceHandler) Name() resweave.ResourceName {
-	return arh.api.Name()
+func (erh EasyResourceHandler) Name() resweave.ResourceName {
+	return erh.api.Name()
 }
 
-func (arh EasyResourceHandler) SetID(id resweave.ID) error {
-	return arh.api.SetID(id)
+func (erh EasyResourceHandler) SetID(id resweave.ID) error {
+	return erh.api.SetID(id)
 }
 
-func (arh EasyResourceHandler) GetIDValue(ctx context.Context) (string, error) {
-	return arh.api.GetIDValue(ctx)
+func (erh EasyResourceHandler) GetIDValue(ctx context.Context) (string, error) {
+	return erh.api.GetIDValue(ctx)
 }
 
 // end resweave.APIResource function equivalents
@@ -122,28 +122,28 @@ type easyUpdater interface {
 	Update(id string, ctx context.Context, writer response.Writer, req *http.Request)
 }
 
-func (arh EasyResourceHandler) AddEasyResource(s resweave.Server) error {
+func (erh EasyResourceHandler) AddEasyResource(s resweave.Server) error {
 	if s == nil {
 		return ErrNilServer
 	}
-	return s.AddResource(arh.api)
+	return s.AddResource(erh.api)
 }
 
 // By default an Update can be either Put or Patch; both are supported.
 //
 // You can limit updates to one or the other using this method.
 //
-// If you do not want to support update at all , use `arh.SetUpdate(nil)`.
+// If you do not want to support update at all , use `erh.SetUpdate(nil)`.
 //
 // If you pass (false, false) here nothing will be changed
-func (arh EasyResourceHandler) SetUpdateAcceptedMethods(acceptPut bool, acceptPatch bool) {
+func (erh EasyResourceHandler) SetUpdateAcceptedMethods(acceptPut bool, acceptPatch bool) {
 	if !acceptPut && !acceptPatch {
 		// ignore this;
 		return
 	}
 	accept := methodAcceptance{http.MethodPut: acceptPut, http.MethodPatch: acceptPatch}
 
-	arh.setAcceptedMethods(resweave.Update, accept)
+	erh.setAcceptedMethods(resweave.Update, accept)
 }
 
 type methodAcceptance map[string]bool
@@ -171,29 +171,29 @@ type validationFuncMap map[resweave.ActionType]easyValidateFunc
 // status code won't be used except when an error is being reported.
 type easyValidateFunc func(context.Context, response.Writer, *http.Request) (int, response.ServiceError)
 
-func (arh EasyResourceHandler) setAcceptedMethods(at resweave.ActionType, accept methodAcceptance) {
+func (erh EasyResourceHandler) setAcceptedMethods(at resweave.ActionType, accept methodAcceptance) {
 	if accept == nil {
 		// revert to defaults - allows caller to easily 'reset' things
-		arh.acceptedMethods[at] = acceptedMethods[at]
+		erh.acceptedMethods[at] = acceptedMethods[at]
 		return
 	}
-	arh.acceptedMethods[at] = accept
+	erh.acceptedMethods[at] = accept
 }
 
-func (arh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx context.Context, w http.ResponseWriter, r *http.Request) {
+func (erh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	funcName := "handleResourceAction"
-	arh.Infow(funcName, "Status", "Starting")
-	defer arh.Infow(funcName, "Status", "Completed")
+	erh.Infow(funcName, "Status", "Starting")
+	defer erh.Infow(funcName, "Status", "Completed")
 
 	// make a writer
 	writer := response.NewWriter(w)
 
 	// validations
-	if status, err := arh.standardValidations(at, r); err != nil {
+	if status, err := erh.standardValidations(at, r); err != nil {
 		writer.WriteErrorResponse(status, err)
 		return
 	}
-	if validateFn := arh.validations[at]; validateFn != nil {
+	if validateFn := erh.validations[at]; validateFn != nil {
 		if status, err := validateFn(ctx, writer, r); err != nil {
 			writer.WriteErrorResponse(status, err)
 			return
@@ -201,48 +201,48 @@ func (arh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx 
 	}
 
 	// Since we prevalidated whether the function is implemented we know we can call it based on the value of at
-	arh.Infow(at.String(), "Status", "Starting")
-	defer arh.Infow(at.String(), "Status", "Completed")
+	erh.Infow(at.String(), "Status", "Starting")
+	defer erh.Infow(at.String(), "Status", "Completed")
 
 	// try to call non-id methods first:
 	switch at {
 	case resweave.Create:
-		arh.resource.(easyCreator).Create(ctx, writer, r)
+		erh.resource.(easyCreator).Create(ctx, writer, r)
 		return
 	case resweave.List:
-		arh.resource.(easyLister).List(ctx, writer, r)
+		erh.resource.(easyLister).List(ctx, writer, r)
 		return
 	}
 
 	// try to call id methods with an error if id is missing
-	id, err := arh.api.GetIDValue(ctx)
+	id, err := erh.api.GetIDValue(ctx)
 	if err != nil {
 		writer.WriteErrorResponse(http.StatusBadRequest, response.SvcErrorInvalidResourceId)
 		return
 	}
 	switch at {
 	case resweave.Fetch:
-		arh.resource.(easyFetcher).Fetch(id, ctx, writer, r)
+		erh.resource.(easyFetcher).Fetch(id, ctx, writer, r)
 		return
 	case resweave.Delete:
-		arh.resource.(easyDeleter).Delete(id, ctx, writer, r)
+		erh.resource.(easyDeleter).Delete(id, ctx, writer, r)
 		return
 	case resweave.Update:
-		arh.resource.(easyUpdater).Update(id, ctx, writer, r)
+		erh.resource.(easyUpdater).Update(id, ctx, writer, r)
 		return
 	}
 }
 
-func (arh EasyResourceHandler) standardValidations(at resweave.ActionType, r *http.Request) (int, response.ServiceError) {
+func (erh EasyResourceHandler) standardValidations(at resweave.ActionType, r *http.Request) (int, response.ServiceError) {
 	// for now we don't need context or writer, but as we add more common validations we can add them in
 
-	if !arh.validateActionImplemented(at) {
-		arh.Errorw("standardValidations", "action", arh.api.Name().String(), "reason", "not-implemented")
+	if !erh.validateActionImplemented(at) {
+		erh.Errorw("standardValidations", "action", erh.api.Name().String(), "reason", "not-implemented")
 		return http.StatusMethodNotAllowed, response.SvcErrorNoRegisteredMethod
 	}
 
-	if !arh.validateAcceptedMethods(at, r.Method) {
-		arh.Errorw("standardValidations", "resource", arh.api.Name().String(), "bad-method", r.Method, "accepted-methods", acceptedMethods[at])
+	if !erh.validateAcceptedMethods(at, r.Method) {
+		erh.Errorw("standardValidations", "resource", erh.api.Name().String(), "bad-method", r.Method, "accepted-methods", acceptedMethods[at])
 		return http.StatusMethodNotAllowed, response.SvcErrorInvalidMethod.WithDetail(r.Method)
 	}
 
@@ -250,28 +250,28 @@ func (arh EasyResourceHandler) standardValidations(at resweave.ActionType, r *ht
 	return 0, nil
 }
 
-func (arh EasyResourceHandler) validateAcceptedMethods(at resweave.ActionType, method string) bool {
-	_, found := arh.acceptedMethods[at][method]
+func (erh EasyResourceHandler) validateAcceptedMethods(at resweave.ActionType, method string) bool {
+	_, found := erh.acceptedMethods[at][method]
 	return found
 }
 
-func (arh EasyResourceHandler) validateActionImplemented(at resweave.ActionType) bool {
-	if arh.resource == nil {
+func (erh EasyResourceHandler) validateActionImplemented(at resweave.ActionType) bool {
+	if erh.resource == nil {
 		return false
 	}
 
 	found := false
 	switch at {
 	case resweave.Create:
-		_, found = arh.resource.(easyCreator)
+		_, found = erh.resource.(easyCreator)
 	case resweave.List:
-		_, found = arh.resource.(easyLister)
+		_, found = erh.resource.(easyLister)
 	case resweave.Fetch:
-		_, found = arh.resource.(easyFetcher)
+		_, found = erh.resource.(easyFetcher)
 	case resweave.Delete:
-		_, found = arh.resource.(easyDeleter)
+		_, found = erh.resource.(easyDeleter)
 	case resweave.Update:
-		_, found = arh.resource.(easyUpdater)
+		_, found = erh.resource.(easyUpdater)
 	}
 
 	return found
