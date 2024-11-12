@@ -1,0 +1,7 @@
+{
+    "recommendations": [
+        "asciidoctor.asciidoctor-vscode",
+        "joselitofilho.ginkgotestexplorer",
+        "golang.go"
+    ]
+}
