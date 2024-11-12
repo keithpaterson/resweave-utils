@@ -1,13 +1,24 @@
-# Resweave helpers for easier resource management and other utilities
+= Resweave Utilities
+Helpers for easier resource management and other utilities
 
-## Importing
+== Importing
 
 To import this project you need this command-line:
 ```
 GOPRIVATE=github.com/keithpaterson/resweave-utils go get github.com/keithpaterson/resweave-utils
 ```
 
-## Tests
+== Tests
 
 To run unit tests you need to include the 'testutils' build tag; the build.sh script does that for you.
 
+== Project Health
+
+_TBD_
+
+== Project Status
+
+|===
+| Date Initiated | Status | Completed?
+
+| Aug 29, 2024 | Initial Implementation | _NO_
