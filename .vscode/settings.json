@@ -1,4 +1,5 @@
 {
+    "go.testTags": "testutils", // ???KWP: note: builds for test not release
     "go.buildTags": "testutils", // ???KWP: note: builds for test not release
     "ginkgotestexplorer.buildTags": "testutils",
 }
