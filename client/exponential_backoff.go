@@ -66,15 +66,6 @@ func (b *ExponentialBackoff) Advance() time.Duration {
 
 func (b *ExponentialBackoff) Start() <-chan time.Time {
 	b.Stop()
-
-	// If there's no timeout, we allow Start() but immediately trigger the channel
-	if b.timeout == 0 {
-		C := make(chan time.Time)
-		defer func() {
-			C <- time.Now()
-		}()
-		return C
-	}
 	b.ticker = time.NewTicker(b.timeout)
 	return b.ticker.C
 }
