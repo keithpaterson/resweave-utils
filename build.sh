@@ -1,84 +1,8 @@
 #!/usr/bin/env bash
 
-_script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-_root_dir=${_script_dir}
-_test_report_dir=${_root_dir}/.reports
+_root_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+_gitroot_dir=$(cd ${_root_dir} && git rev-parse --show-toplevel)
 
-show_usage() {
-    echo "build.sh test [coverage]"
-    echo "  runs all the tests"
-    echo "  'coverage' generates a code-coverage report"
-}
-
-run_tests() {
-    local _op=$1
-    shift
-
-    case ${_op} in
-      coverage)
-        _unit_coverage $*
-        ;;
-      *)
-        _unit_tests $*
-        
-    esac
-    go test --tags=testutils ./...
-}
-
-_unit_tests() {
-  echo "Running unit tests..."
-  mkdir -p ${_test_report_dir}
-  _test_check_and_install_ginkgo
-  ginkgo --tags testutils --repeat 1 -r --output-dir ${_test_report_dir} --json-report unit_tests.json ./... > ${_test_report_dir}/unit_tests.log 2>&1
-  local _result=$?
-  cat ${_test_report_dir}/unit_tests.log
-  if [ ${_result} -ne 0 ]; then
-      exit ${_result}
-  fi
-}
-
-_unit_coverage() {
-    echo "generating test coverage..."
-    mkdir -p ${_test_report_dir}
-    rm -f ${_test_report_dir}/coverage.raw.out ${_test_report_dir}/coverage.out
-    go test --tags testutils --test.coverprofile ${_test_report_dir}/coverage.raw.out ./... | grep -v mocks 
-    local _result=$?
-
-    # filter out mocks directories from coverage
-    grep -vE 'mocks/|utility/test/' ${_test_report_dir}/coverage.raw.out > ${_test_report_dir}/coverage.out
-    go tool cover -html=${_test_report_dir}/coverage.out -o ${_test_report_dir}/coverage.html
-    if [ ${_result} -ne 0 ]; then
-        exit ${_result}
-    fi
-}
-
-_test_check_and_install_ginkgo() {
-  if ! command -v ginkgo &> /dev/null; then
-    echo install ginkgo
-    go install github.com/onsi/ginkgo/v2/ginkgo
-  fi
-}
-
-#
-# MAIN
-#
-
-while [ $# -gt 0 ]; do
-  _op=$1
-  shift
-
-  case ${_op} in
-    -h|--help|help)
-      show_usage
-      exit 0
-      ;;
-    test)
-      run_tests $*
-      exit 0
-      ;;
-    *)
-      echo "ERROR: unexpected: '${_op}'"
-      exit 1
-      ;;
-  esac
-done
+# move into the root folder to run everything else
+cd $_root_dir
+source scripts/_menu_engine.sh
