@@ -1,0 +1,103 @@
+= Resource Package
+
+This package provides a Resource wrapper that is used with `resweave` to speed up implementation for resource objects.
+
+== class EasyResource
+
+This class is encapsulates your resource object and handles the basic request processing before calling handler functions
+provided by your implementation.
+
+Your resource object only has to implement the REST functions necessary for that object.  Any functions that you don't
+(need to) support can be omitted entirely.
+The REST function prototypes are:
+
+* `List(context.Context, response.Writer, *http.Request)`: List all resources
+* `Create(context.Context, response.Writer, *http.Request)`: Create a new resource
+* `Fetch(id string, context.Context, response.Writer, *http.Request)`: Fetch a resource by it's ID
+* `Delete(id string, context.Context, response.Writer, *http.Request)`: Delete a resource by it's ID
+* `Update(id string, context.Context, response.Writer, *http.Request)`: Update a resource by it's ID
+
+In order to realize a resource handler and register it with `resweave`, use the `resource.NewResource()` function.
+
+This simple example stores 'Foo' objects in memory, and provides only the `Create` and `List` functions.
+[source,go]
+----
+// file: foo_resource.go
+
+type Foo struct {
+    ID: int      `json:"id"`
+    Name: string `json:"name"`
+}
+
+type FooResource struct {
+    resweave.LogHolder
+
+    foos   []MyData
+    nextID int
+    mtx    sync.Mutex
+}
+
+func AddResource(server resweave.Server) {
+    res := resource.NewResource("foo", &FooResource {
+        LogHolder: resweave.NewLogholder("foo", nil),
+        foos: make([]Foo, 0),
+    })
+    res.SetID(resweave.NumericID)
+    return res.AddEasyResource(server)
+}
+
+func (fr *FooResource) List(_ context.Context, writer resource.ResponseWriter, _ *http.Request) {
+    fr.mtx.Lock()
+    defer fr.mtx.Unlock()
+
+    if err := writer.WriteJsonResponse(http.StatusOK, fr.foos); err != nil {
+        fr.Errorw("List", "Status", "error", "Error", err)
+    }
+}
+
+func (fr *FooResource) Create(_context.Context, writer resource.ResponseWriter, req *http.Request) {
+    var input Foo
+    if err := rw.UnmarshalJson(req.Body, &input); err != nil {
+        fr.Errorw("Create", "Status", "read error", "Error", err)
+        writer.WriteErrorResponse(http.StatusBadRequest, response.SvrErrorReadRequestFailed.WithError(err))
+    }
+
+    fr.mtx.Lock()
+    defer fr.mtx.Unlock()
+
+    input.ID = fr.nextId
+    fr.nextId++
+
+    fr.foos = append(fr.foos, foo)
+    if err := writerWriteJsonResponse(http.StatusOK, foo); err != nil {
+        fr.Errorw("Create", "Status", "write error", "Error", err)
+    }
+}
+----
+
+Since we did not implement `Fetch`, `Delete`, or `Update`, calling those REST methods will automatically return
+`http.StatusMethodNotAllowed`
+
+Once this has been registered with `resweave`, you can use http requests to list or create Foo objects:
+
+* *List*: `request.NewGetRequest("http://test.org/foo")`
+* *Create*: `request.NewPostRequest("http://test.org/foo").WithJsonBody(Foo{ID: 123, Name: "My Foo"})`
+* *Fetch*: `request.NewGetRequest("http://test.org/foo/123")`
+* *Delete*: `request.NewDeleteRequest("http://test.org/foo/123")`
+* *Update*: `request.NewPutRequest("http://test.org/foo/123").WithJsonBody(Foo{ID: 123, Name: "My Foo"})`
+** Note that for update, you use Put/Patch as desired and your resource handler's `Update()` function can check the request method
+   to determine which logic to perform.  The `SetUpdateAcceptedMethods()` function may be of interest as
+   this can configure the resource handler to automatically reject Put or Patch if you only want to support one of them.
+
+=== Non-ID methods
+
+`List` and `Create` are considered "non-id" methods because they do not require an ID to be present in the REST specification.
+
+== ID methods
+
+`Fetch`, `Delete` and `Update` are "id" methods because they require a resource ID to be part of the URI.  A couple of things to
+note:
+
+1. `List` and `Fetch` differ only in that `Fetch` requires the ID in the URI.  This is a `resweave` implementation detail.
+2. The handler functions receive the id as a string;  This simplifies the API considerably, but it does mean that the resource
+   handler must convert from string to the appropriate ID type each time.
