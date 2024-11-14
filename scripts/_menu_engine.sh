@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
 
-# The intended use for this is
-#   ./agt command (for commands found in '_general.sh')
-#   ./agt category command
-# where
-#   command is a function to run or a 'general' function
-#   category indicates a group of functions
+# The intended use for this is to source this file from your script:
+#   ```
+#   source /where/this/script/lives/_menu_engine.sh
+#   ```
 #
-# for example:
-#   ./agt clean
-#     loads the general category and runs 'run_general clean'
-#   ./agt test integration
-#     loads the test category and runs a function with parameters: 'run_test integration'
+# Note that this script relies on _script_common.sh and won't work without it.
+# In particular, it uses the ${_category_dir} to locate the subscripts.
 #
+# This script, when sourced, will automatically try to load _script_common.sh
+# from the same folder where this file lives.
+
 # the flow for deciding where to locate a function is:
 #   if a function `run_$1()` exists, call it with $*
-#   if a file `scripts/_$1.sh` exists, `source` it
+#   if a file `${_category_dir}/_$1.sh` exists, `source` it
 #     then call `run_$1()` with $*
 #
-# each category-handler script is expected to:
-#   be found at `scripts/_<category>.sh`
-#   implement a help function `run_<category>_usage()`
-#   implement an entry point function `run_<category>()`
+# each category-handler subscript is expected to:
+#   - be found at `${_category_dir}/_<category>.sh`
+#   - implement a help function `run_<category>_usage()`
+#   - implement an entry point function `run_<category>()`
 #
-# there may be categories that don't have entry points but do have functions
+# there may be categories that don't have run entry points but do have functions
 # that make life easier (e.g. for docker calls).  These are expected to:
-#   be found at `scripts/_<category>.sh`
-#   be included by other scripts via `using <name>`
-#     where <name> indicates the category; these are included via `source scripts/_<name>.sh`
+#   - be found at `${_category_dir}/_<category>.sh`
+#   - be included by other scripts via `using <name>`
+#     where <name> indicates the category; these are included as described above.
 #     (the `using()` function is a glorified wrapper around `source`)
 
 _menu_engine=initializing
