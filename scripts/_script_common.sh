@@ -1,6 +1,11 @@
 # common functions used by the scripts; makes it possible to create standalone operations 
 # that execute commands using the existing scripts
 
+# The intended use for this is to source this file from your script:
+#   ```
+#   source /where/this/script/lives/_script_common.sh
+#   ```
+
 # use old syntax for root-script-name since negative indexing started in bash 4.2 and sometimes that's not installed.
 _root_script_name=$(basename ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]})
 _category_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -72,5 +77,11 @@ _run_command() {
 }
 
 # load the menu engine after defining things it will need.  REQUIRES that the engine be in the same folder as this file.
+# You can avoid loading the engine scripts by setting ${_menu_engine} prior to sourcing _script_common.sh
+# e.g.
+# ```
+# _menu_engine=excluded
+# source /where/this/script/lives/_script_common.sh
+# ```
 [ -z "${_menu_engine}" ] && source ${_category_dir}/_menu_engine.sh
 
