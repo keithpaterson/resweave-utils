@@ -7,6 +7,7 @@ run_test_usage() {
   echo "  where $(color -bold op) is:"
   echo "    $(color -lt_green \<empty\>):  run unit tests"
   echo "    $(color -lt_green coverage): run unit tests and generate coverage"
+  echo "    $(color -lt_green generate): generate mocks"
   echo "      coverage reports will be found in '${_test_report_dir}'"
 }
 
@@ -20,6 +21,9 @@ run_test() {
       ;;
     coverage)
       _unit_coverage $*
+      ;;
+    generate|mocks)
+      _generate_mocks $*
       ;;
     -h|--help)
       run_handler_usage test
@@ -60,6 +64,10 @@ _unit_coverage() {
     if [ ${_result} -ne 0 ]; then
         exit ${_result}
     fi
+}
+
+_generate_mocks() {
+  go generate ./...
 }
 
 _test_check_and_install_ginkgo() {
