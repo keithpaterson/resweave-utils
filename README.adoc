@@ -8,6 +8,19 @@ To import this project you need this command-line:
 GOPRIVATE=github.com/keithpaterson/resweave-utils go get github.com/keithpaterson/resweave-utils
 ```
 
+=== dependencies
+
+To run the build.sh script you will need `bash_tools`:
+(clone this to some locally convenient folder)
+```
+git clone git@github.com:keithpaterson/bash_tools.git
+```
+
+You will need to set an environment variable to point at the `bash_tools` folder:
+```
+export BASH_TOOLS_DIR="path/to/bash_tools"
+```
+
 == Tests
 
 To run unit tests you need to include the 'testutils' build tag; the build.sh script does that for you.
