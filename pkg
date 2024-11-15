@@ -5,4 +5,6 @@ _gitroot_dir=$(cd ${_root_dir} && git rev-parse --show-toplevel)
 
 # move into the root folder to run everything else
 cd $_root_dir
-source scripts/_menu_engine.sh
+ME_CATEGORY_DIR=scripts
+source ${BASH_TOOLS_DIR}/menu_engine/menu_engine.sh
+
