@@ -5,12 +5,21 @@
 #   ```
 #   source /where/this/script/lives/_script_common.sh
 #   ```
+#
+# GLOBAL VARIABLES:
+#
+# The following variables can be set before sourcing this file in order to control its behaviour:
+#   ME_ROOT_SCRIPT_NAME: displayed in help text, this defaults to the name of the base script
+#   ME_CATEGORY_DIR:     defines where to locate category subscripts.  Defaults to the directory this file is in.
+#   ME_ENGINE:           set to a non-empty string if you don't want/need to load the category handlers
+
+_me_root_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # use old syntax for root-script-name since negative indexing started in bash 4.2 and sometimes that's not installed.
-_root_script_name=$(basename ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]})
-_category_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+ME_ROOT_SCRIPT_NAME=${ME_ROOT_SCRIPT_NAME:-$(basename ${BASH_SOURCE[${#BASH_SOURCE[@]}-1]})}
+ME_CATEGORY_DIR=${ME_CATEGORY_DIR:-${_me_root_dir}}
 
-_script_common=loaded
+ME_COMMON=loaded
 
 using() {
   if [ -z "$1" ]; then
@@ -24,7 +33,7 @@ run_handler_usage() {
   local _h=$1
   (
     using ${_h}
-    echo "$(color -lt_green ${_h}) commands: (./${_root_script_name} ${_h} [op] ...)"
+    echo "$(color -lt_green ${_h}) commands: (./${ME_ROOT_SCRIPT_NAME} ${_h} [op] ...)"
     _run ${_h}_usage
     echo
   )
@@ -35,7 +44,7 @@ _category_file() {
     echo "ERROR: category_file() requires a category name."
     exit 1
   fi
-  echo ${_category_dir}/_${1}.sh
+  echo ${ME_CATEGORY_DIR}/_${1}.sh
 }
 
 # $1: the command plus arguments
@@ -83,5 +92,5 @@ _run_command() {
 # _menu_engine=excluded
 # source /where/this/script/lives/_script_common.sh
 # ```
-[ -z "${_menu_engine}" ] && source ${_category_dir}/_menu_engine.sh
+[ -z "${ME_ENGINE}" ] && source ${_me_root_dir}/_menu_engine.sh
 
