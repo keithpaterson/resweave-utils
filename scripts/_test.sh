@@ -67,7 +67,7 @@ _unit_coverage() {
 }
 
 _generate_mocks() {
-  go generate ./...
+  go generate $* ./...
 }
 
 _test_check_and_install_ginkgo() {
