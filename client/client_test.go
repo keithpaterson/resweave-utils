@@ -171,19 +171,19 @@ var _ = Describe("Client", func() {
 			Entry("with response error body succeeds", "/test", nil, http.StatusForbidden, response.SvcErrorInvalidMethod),
 		)
 		DescribeTable("Timeout with Retry",
-			func(timeouts int, attempts int) {
+			func(svcTimeouts int, clientRetries int, expectTimeout bool) {
 				// Arrange
 				svc := test.HttpService().
 					WithMethod(http.MethodGet).
 					WithPath("/test").
-					WithTimeouts(timeouts, time.Second).
+					WithTimeouts(svcTimeouts, 2*time.Millisecond).
 					ReturnStatusCode(http.StatusOK)
 				host, tearDown := svc.Start()
 				defer tearDown()
 
 				client := NewTestHTTPClient().
-					WithRetryHandler(NewRetryCounter(attempts)).
-					WithBackoff(StaticBackoff(time.Microsecond))
+					WithRetryHandler(NewRetryCounter(clientRetries)).
+					WithBackoff(StaticBackoff(time.Millisecond))
 				req, err := request.NewGetRequest(host + "/test")
 				Expect(err).ToNot(HaveOccurred())
 
@@ -191,18 +191,19 @@ var _ = Describe("Client", func() {
 				resp, err := client.Execute(req)
 
 				// Assert
-				if attempts >= timeouts {
+				if expectTimeout {
 					Expect(err).To(MatchError(ErrRequestTimeout))
 				} else {
 					Expect(err).ToNot(HaveOccurred())
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
-					Expect(svc.GetCallCount()).To(Equal(1))
+					Expect(svc.GetCallCount()).To(Equal(svcTimeouts + 1))
 				}
 			},
-			Entry("with 1 timeout and 1 attempt times out", 1, 1),
-			Entry("with 1 timeout and 2 attempts succeeds", 1, 2),
-			Entry("with 2 timeouts and 2 attempts times out", 2, 2),
-			Entry("with 2 timeouts and 3 attempts succeeds", 2, 3),
+			Entry("with 1 timeout and 0 retries times out", 1, 0, true),
+			Entry("with 1 timeout and 1 retry succeeds", 1, 1, false),
+			Entry("with 2 timeouts and 1 retry times out", 2, 1, true),
+			Entry("with 2 timeouts and 2 retry succeeds", 2, 2, false),
+			Entry("with 3 timeouts and 2 retry times out", 3, 2, true),
 		)
 		It("should allow for canceling a long-running operation", func() {
 			// Arrange
