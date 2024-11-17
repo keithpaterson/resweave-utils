@@ -10,7 +10,7 @@ GOPRIVATE=github.com/keithpaterson/resweave-utils go get github.com/keithpaterso
 
 === dependencies
 
-To run the build.sh script you will need `bash_tools`:
+To run the `pkg` script you will need the `bash_tools` repository:
 (clone this to some locally convenient folder)
 ```
 git clone git@github.com:keithpaterson/bash_tools.git
@@ -23,7 +23,7 @@ export BASH_TOOLS_DIR="path/to/bash_tools"
 
 == Tests
 
-To run unit tests you need to include the 'testutils' build tag; the build.sh script does that for you.
+To run unit tests you need to include the 'testutils' build tag; the `pkg`` script does that for you.
 
 == Project Health
 
