@@ -3,12 +3,12 @@ package client
 import "fmt"
 
 const (
-	defaultMaxAttempts = 4 // one plus three retries
+	defaultMaxRetries = 3
 )
 
 type retryCounter struct {
-	maxAttempts int
-	attempt     int
+	maxRetries int
+	attempt    int
 }
 
 // maxAttempts is the total number of attempts you want, including retries
@@ -16,12 +16,9 @@ type retryCounter struct {
 //	so (maxAttempts == 1) => no retries
 //	   (maxAttempts == 2) => 1 retry
 //	   ... and so on
-func NewRetryCounter(maxAttempts int) *retryCounter {
-	if maxAttempts < 1 {
-		// TODO(kwpaterson): once we have "get me a logger" logic add it here and use it.
-		maxAttempts = 1
-	}
-	return &retryCounter{maxAttempts: maxAttempts, attempt: 0}
+func NewRetryCounter(maxRetries int) *retryCounter {
+	maxRetries = max(maxRetries, 0)
+	return &retryCounter{maxRetries: maxRetries, attempt: 0}
 }
 
 func (r *retryCounter) Reset() {
@@ -30,7 +27,7 @@ func (r *retryCounter) Reset() {
 
 // call SafeToRetry() before preparing for an attempt, to see if max attempts has been exceeded
 func (r *retryCounter) SafeToRetry() bool {
-	return r.attempt < r.maxAttempts
+	return r.attempt <= r.maxRetries
 }
 
 // call Advance() when you are about to make an attempt
@@ -45,5 +42,5 @@ func (r *retryCounter) Advance() bool {
 }
 
 func (r *retryCounter) State() string {
-	return fmt.Sprintf("attempt %d of %d", r.attempt, r.maxAttempts)
+	return fmt.Sprintf("attempt %d of %d", r.attempt, r.maxRetries+1)
 }

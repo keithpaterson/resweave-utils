@@ -13,5 +13,5 @@ type RetryHandler interface {
 }
 
 func DefaultRetryHandler() RetryHandler {
-	return NewRetryCounter(defaultMaxAttempts)
+	return NewRetryCounter(defaultMaxRetries)
 }
