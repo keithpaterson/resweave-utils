@@ -140,12 +140,13 @@ func (s *httpService) Start() (string, func()) {
 		}
 
 		writer := response.NewWriter(w)
-		if s.callCounter < s.timeoutCounter {
+		if s.callCounter <= s.timeoutCounter {
 			// block (?)
 			<-time.NewTicker(s.timeoutDelay).C
 			// or just return without touching the writer?
 			return
 		}
+
 		if s.respBody != nil {
 			writer.WriteDataResponse(s.status, s.respBody, s.respMimeType)
 		} else {
