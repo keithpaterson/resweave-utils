@@ -6,8 +6,6 @@ _me_tools_root=${_root_dir}/.bash_tools
 #
 # Feel free to copy and paste this code for your own parent script.
 
-BASH_TOOLS_DIR=
-
 # Args:
 #   -r <folder> : where the bash_tools/ folder should be installed
 #     * if the folder doesn't exist, will create it via `git clone`
