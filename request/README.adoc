@@ -16,10 +16,10 @@ Examples:
 [source,go]
 ----
 get_req := NewGetRequest("http://test.org/foo")
-post_req := NewGetRequest("http://test.org/foo", WithNoBody())
-put_req := NewGetRequest("http://test.org/foo", WithNoBody())
-patch_req := NewGetRequest("http://test.org/foo", WithNoBody())
-delete_req := NewGetRequest("http://test.org/foo", WithNoBody())
+post_req := NewPostRequest("http://test.org/foo", WithNoBody())
+put_req := NewPutRequest("http://test.org/foo", WithNoBody())
+patch_req := NewPatchRequest("http://test.org/foo", WithNoBody())
+delete_req := NewDeleteRequest("http://test.org/foo", WithNoBody())
 ----
 
 Obviously you will want to provide actual Body data for some requests; there are four body-provider functions
@@ -47,12 +47,12 @@ type Foo struct {
 //     "name": "My Foo"
 //   }
 foo := Foo{ID: 123, Name: "My Foo"}
-req := NewPostReq("http://test.org/foo", WtihJsonBody(foo))
+req := NewPostRequest("http://test.org/foo", WtihJsonBody(foo))
 ----
 
 === WithBinaryBody()
 Similar to `WithJsonBody()` except that the data is provied as a byte slice and the MIME type will be set to "application/octet-stream"
 
 === WithCustomBody()
-Identital to `WithBinaryBody()` except that the caller specifies the MIME type.  This is useful for any custom blob-like formats like
+Identital to `WithBinaryBody()` except that the caller specifies the MIME type.  This is useful for any custom blob-like formats such as
 images.
