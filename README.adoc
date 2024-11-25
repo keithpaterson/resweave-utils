@@ -8,15 +8,19 @@ To import this project you need this command-line:
 GOPRIVATE=github.com/keithpaterson/resweave-utils go get github.com/keithpaterson/resweave-utils
 ```
 
-=== dependencies
+=== Dependencies
 
-To run the `pkg` script you will need the `bash_tools` repository:
-(clone this to some locally convenient folder)
+To run the `pkg` script you will need access to the `bash_tools` repository:
+
+Normally the `pkg` sctipt will automatically download and use it, but you can download it for
+your personal use and point the `pkg` script to it:
+
+* (clone this to some locally convenient folder)
 ```
 git clone git@github.com:keithpaterson/bash_tools.git
 ```
 
-You will need to set an environment variable to point at the `bash_tools` folder:
+* You will need to set an environment variable to point at the `bash_tools` folder:
 ```
 export BASH_TOOLS_DIR="path/to/bash_tools"
 ```
@@ -40,9 +44,9 @@ _TBD_
 
 == Project Documentation:
 
-- xref:client/README.adoc[Client Package]
-- xref:request/README.adoc[Request Package]
-- xref:response/README.adoc[Response Package]
-- xref:resource/README.adoc[Resource Package]
-- xref:utility/rw/README.adoc[Read-Write Package]
-- xref:utility/test/README.adoc[Test-Utilities Package]
+* xref:client/README.adoc[Client Package]: tools for imstantiating HTTP clients.
+* xref:request/README.adoc[Request Package]: tools for generating requests.
+* xref:response/README.adoc[Response Package]: tools for processing responses.
+* xref:resource/README.adoc[Resource Package]: tools for implementing resweave-compatible resources.
+* xref:utility/rw/README.adoc[Read-Write Package]: serialization tools.
+* xref:utility/test/README.adoc[Test-Utilities Package]: useful tools to use in your unit testing.
