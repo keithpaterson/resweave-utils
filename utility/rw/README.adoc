@@ -1,0 +1,15 @@
+= Read-Write package
+
+== for bytes
+
+=== ReadAll()
+
+Helper for consuming a (possibly `nil`) io.Reader and returning the raw data (or any error reported)
+
+== for json
+
+=== UnmarshalJson()
+
+Helper for unmarshaling JSON data from an io.Reader into a provided struct.  This is handy for reading
+JSON data from requests, responses and even files with some of the error handling taken care of by the
+helper.

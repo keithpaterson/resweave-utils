@@ -1,0 +1,119 @@
+= Client Package
+
+This package includes utilities for managing an http client.
+This includes:
+
+- A wrapper for instantiating an HTTP client using a Fluent-like interface
+- Backoff timers and Retry handlers for handling request timeouts
+
+== Client
+
+Simplifies Instantiating an HTTP clien using syntax that enhances code readability:
+
+=== Instantiate the default HTTP client:
+[source,go]
+----
+defaultClient := client.DefaultHttpClient()
+----
+
+=== Instantiate a custom HTTP client, using:
+
+- A backoff timer starting at 30 seconds that doubles on each retry up to a maximum of 5 minutes
+- 3 retries before failure
+
+[source,go]
+----
+httpClient := client.NewHttpClient("MyClient")
+    .WithContext(context.Background())
+    .WithBackoff(client.NewExponentialBackoff(30 * time.Second, 5 * time.Minute, 2))
+    .WithRetryHandler(client.NewRetryHandler(3))
+----
+
+=== Overriding default HTTP client settings:
+[source,go]
+----
+httpClient := client.DefaultHttpClient()
+    .WithBackoff(client.NewExponentialBackoff(20 * time.Second, 5 * time.Minute, 3))
+----
+
+=== Execute HTTP requests
+The client handles retry/backoff logic and returns only on success or failure
+
+==== Get Request (with no body)
+[source,go]
+----
+getReq := NewGetRequest("http://mysite.org/foo")
+
+httpClient := client.DefaultHttpClient()
+resp, err := httpClient.Execute(getReq)
+----
+
+==== Post Request with json body
+
+- serializes the struct before adding it as the request body
+- automatically sets the MIME type to "application/json"
+
+[source,go]
+----
+struct MyData {
+    ID int             `json:"id"`
+    Name string        `json:"name"`
+    Description string `json:"description"`
+}
+
+body := MyData{ID: 1, Name: "foo", Description: "just an example"}
+postReq := NewPostRequest("http://mysite.org/foo", WithJsonBody(body))
+
+httpClient := client.DefaultHttpClient()
+resp, err := httpClient.Execute(postReq)
+----
+
+== Backoff Timers
+
+Backoff timers are used by the HTTP client whenever a `client.Execute(...)` request times out.
+
+There are two backoff timers available in this package, but you may implement your own
+based on the `Backoff` interface spec.
+
+=== Static backoff
+
+This backoff's timeout period never advances.  That is to say, `backoff.Advance()` always returns
+the same value.
+
+Examples:
+[source,go]
+----
+backoff_1s := NewStaticBackoff(time.Second)
+backoff_5s := NewStaticBackoff(5 * time.Second)
+backoff_60s := NewStaticBackoff(time.Minute)
+----
+
+=== Exponential backoff
+
+This backoff's timeout period increases using a multiplier on each subsequent call to `backoff.Advance()`.
+
+Examples:
+[source,go]
+----
+// `Advance()` returns:  1s, 2s, 4s, 8s, 16s, 32s, 60, 60s, 60s, ...
+exponentialBackoff := NewExponentialBackoff(time.second, time.Minute, 2)
+
+// `Advance()` returns: 1s, 5s, 10s, 20s, 40s, 60s, 60s, 60s, ...
+exponentialBackoff := NewExponentialBackoff(time.second, time.Minute, 5)
+----
+
+== Retry Handlers
+
+Retry handlers are used by the HTTP client whenever a `client.Execute(...)` request times out.
+
+There is only one retry implementation provided which will count attempts until a maximum threshold is
+reached after which the client will report the `client.ErrRequestTimeout` error.
+
+You may implement your own Retry Handler based on the `client.Retry` interface spec.
+
+Examples:
+[source,go]
+----
+no_retry := NewRetryHandler(1) // 1 total attempt, no retries
+retry_3 := NewRetryHandler(4) // 4 total attempts, or 1 attempt and 3 retries
+----

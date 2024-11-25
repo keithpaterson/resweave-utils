@@ -1,0 +1,58 @@
+= Request Package
+
+Utilities for creating HTTP requests that can be used with the xref:../client/README.adoc[HTTP client].
+
+Using these helper functions will help to ensure that the request is configured properly, including any
+necessary headers, e.g. MIME type
+
+== Creating Requests
+
+Use one of the `NewXXXRequest()` functions, where `XXX` is the HTTP method for the request.
+for non-GET requests you will also need to provide a body using the `BodyDataProvider` function.
+
+You may implement your own BodyDataProvider function based on the interface spec.
+
+Examples:
+[source,go]
+----
+get_req := NewGetRequest("http://test.org/foo")
+post_req := NewGetRequest("http://test.org/foo", WithNoBody())
+put_req := NewGetRequest("http://test.org/foo", WithNoBody())
+patch_req := NewGetRequest("http://test.org/foo", WithNoBody())
+delete_req := NewGetRequest("http://test.org/foo", WithNoBody())
+----
+
+Obviously you will want to provide actual Body data for some requests; there are four body-provider functions
+supplied in this package
+
+=== WithNoBody()
+As the name suggests, this explicitly indicates that your request requires no body. This adds to code readability and otherwise
+has no effect on the request.
+
+=== WithJsonBody()
+Given an instantiation of a `struct` type that has proper `json` tags, this will serialize the struct as JSON and add it to the
+request body.
+
+For example:
+[source,go]
+----
+type Foo struct {
+    ID: int      `json:"id"`
+    Name: string `json:"name"`
+}
+
+// create a request with an "application/json" body that looks like this/L:
+//   {
+//     "id": 123,
+//     "name": "My Foo"
+//   }
+foo := Foo{ID: 123, Name: "My Foo"}
+req := NewPostReq("http://test.org/foo", WtihJsonBody(foo))
+----
+
+=== WithBinaryBody()
+Similar to `WithJsonBody()` except that the data is provied as a byte slice and the MIME type will be set to "application/octet-stream"
+
+=== WithCustomBody()
+Identital to `WithBinaryBody()` except that the caller specifies the MIME type.  This is useful for any custom blob-like formats like
+images.

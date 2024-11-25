@@ -1,0 +1,109 @@
+= Response package
+
+== For Services
+
+Utilities for writing HTTP responses
+
+=== Writer
+
+The `response.Writer` makes it easy to populate the `http.Response` object when processing a request.
+
+==== WriteResponse()
+Sets the status code for the response.  Useful when there is no data to return, e.g. during Delete operations.
+
+==== WriteJsonResponse()
+Sets the status code and adds the provided data to the response body.  The MIME type will be set to "application/json".
+
+Example:
+[source,go]
+----
+type FooResponse struct {
+    ID: int        `json:"id"`
+    Name: string   `json:"name"`
+    Status: string `json:"status"`
+}
+
+func MyRequestHandler(c, context.Context, r *http.Request, w http.ResponseWriter) {
+    writer := NewWriter(w)
+
+    // ... handle the request ...
+
+    // returns a response with status = 200 and body
+    //   {
+    //      "id":123,
+    //      "name": "My Foo",
+    //      "status": "active"
+    //   }
+    foo := FooResponse(ID: 123, Name: "My Foo", Status: "active")
+    writer.WriteJsonResponse(http.StatusOK, foo)
+}
+----
+
+==== WriteDataResponse()
+Similar to `WriteJsonResponse()` except that the body data is a byte slice and the MIME type must be specified by the caller.
+
+==== WriteErrorResponse()
+Similar to `WriteResponse()` except that an error type must be provided which is included in the body as JSON data.
+
+=== Service Error
+A lightweight wrapper on the `error` type is provided that allows for the definition of a Service Error.
+
+A Service Error is simply a structure with a Code and Description and (optionally) an embedded error.
+Instantiating a service error is trivial:
+[source,go]
+----
+ErrSvcInvalidWhatsit := NewServiceError(10000, "invalid whatsit") // {Code: 10000, Description: "invalid whatsit"}
+----
+
+You can also instantiate an error with additional information, either descriptive text or an `error` value:
+[source,go]
+----
+// { Code: 10000, Description: "invalid whatsit", wrapped: error{"the whatsit is broken"} }
+svcErr := ErrInvalidWhatsit.WithDetail("the whatsit is broken")
+
+err := errors.New("broken whatsit")
+// { Code: 10000, Description: "invalid whatsit", wrapped: error{"broken whatsit"} }
+svcErr2 := ErrInvalidWhatsit.WithError(err)
+----
+
+== For Clients
+
+Utilities for parsing HTTP responses, generally useful for easy extraction of body data into appropriate structs
+
+=== ParseResponse()
+
+Parse the response object and test that it contains the expected (success) status Code.
+
+If the response does not have the expected status code, this method will read the body as a `response.SvcError`` object and 
+return it.  A generic error object is returned if the body does not contain a SvcError.
+
+Otherwise expect `nil` to be returned.
+
+=== ParseResponseJsonData()
+
+Similar to `ParseResponse()`, this will return a `response.SvcError`` or non-nil `errror` if the status code does not match
+the expectation.
+
+On success, the body is deserialized from Json into a struct.  If deserialization fails an error is returned, otherwise expect `nil`.
+
+Example:
+[source,go]
+----
+resp, err := httpClient.Execute(req)
+
+// using FooResponse struct from above for brevity
+var foo FooResponse
+err := response.ParseResponseJsonData(req, http.StatusOK, &foo)
+if err != nil {
+    return err
+}
+// at this point `foo` will contain the data extracted from the response, e.g.
+//   {ID: 123, Name: "My Foo", Status: "active"}
+
+----
+
+=== ParseResponseBinaryData()
+
+Useful when the response data is not provided in JSON format (maybe an image or custom format of some sort),
+this works like `ParseResponseJsonData()` except that the body data is returned as a byte slice and
+is otherwise left uninterpreted.
