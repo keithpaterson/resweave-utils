@@ -1,0 +1,96 @@
+= Test package
+
+This package contains utilities that are intended to be used with unit tests.
+They contain calls to ginkgo/gomega functions that won't be available in release builds.
+
+To enable this code you must include `-tags testutils` at build time.
+
+== HTTP Service
+
+Implements a fake HTTP service that allows the tester to control how the service response to incoming requests.
+
+This is excellent for testing code that uses the xref:../../client/README.adoc[http client]
+
+This test service uses a Fluent-like interface for declaring how the client is going to behave, which enhances
+readability of your tests and provides a consistent mechanism for exercising your http request/response testing.
+
+The test.HttpService will allow you respond with any status code and embed service errors or other data into the
+response so that you can test how your resource handler is dealing with good/bad responses.
+
+Keep in mind that this is intended to exercise the client side; using this will not evaluate the actual service
+logic; for that you will want to write integration tests that won't use this class.
+
+For example:
+
+Assume you have a resource class `FooResource` that emits a Get request to retrieve a specific `Foo` based on an ID.
+[source,go]
+----
+func (fr *FooResource) Fetch(_ context.Context, id int) (FooResponse, error) {
+    req := request.NewGetRequest(fr.host + "/foo/" + id)
+    httpClient := client.DefaultHTTPClient() // more likely this is a member but for clarity here it is.
+    resp, err := httpClient.Execute(req)
+    if err != nil {
+        return nil, err
+    }
+
+    var respFoo FooResponse
+    err = request.ParseResponseJsonData(resp, http.StatusOK, &respFoo)
+    return respFoo, err
+}
+----
+
+Your test code for the success case might look something like this:
+[source,go]
+----
+var _ = Describe("Test Foo Resource", func() {
+    It("should return a FooResponse in the success case", func() {
+        foo := Foo{ID: 123, Name: "My Foo"}
+        fooResp  := FooResponse{ID: 123, Name: "My Foo", Status: "active"}
+        svc := test.HttpService().
+            WithMethod(http.MethodGet).
+            WithPath("/foo/123").
+            WithJsonBody(foo).
+            ReturnStatusCode(http.StatusOK).
+            ReturnJsonBody(fooResp)
+        host, tearDown := svc.Start()
+        defer tearDown()
+
+        // Note that you'll need to be able to tell the FooResource class what the host name is, because
+        // the test service may use a different port for each test (so tests can run concurrently)
+        fooResource := &FooResource{host: host, ...} // whatever init is required for the resource object
+        resFoo, err := fooResource.Fetch(context.TODO(), 123)
+
+        Expect(err).ToNot(HaveOccurred())
+        Expect(resFoo).To(Equal(&fooResp))
+    })
+})
+----
+
+== JSON utilities
+
+=== MustMarshalJson()
+
+Used during testing to ensure that JSON data is marshalled into a byte slice.
+If the JSON data cannot be marshalled the test will Fail immediately.
+
+This is useful if you are reading test data from a file or you want to inject JSON data into an object
+like the test HTTP client as an inline call.
+
+This could also be used to do a raw byte comparison of a JSON response against an expected value to ensure
+that the stream/body data is exactly what you expect it to be. 
+
+For Example:
+
+_(This is a bit contrived; `WithJsonBody(foo)` is more appropriate here, but it illustrates proper usage.)_
+[source,go]
+----
+
+foo := Foo{ID: 123, Name: "My Foo"}
+fooResp  := FooResponse{ID: 123, Name: "My Foo", Status: "active"}
+svc := test.HttpService().
+    WithMethod(http.MethodGet).
+    WithPath("/foo/123").
+    WithBody(test.MustMarshalJson(foo)). // equivalent to using `WithJsonBody(foo).`
+    ReturnStatusCode(http.StatusOK).
+    ReturnJsonBody(fooResp)
+----
