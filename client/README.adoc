@@ -114,6 +114,7 @@ You may implement your own Retry Handler based on the `client.Retry` interface s
 Examples:
 [source,go]
 ----
-no_retry := NewRetryHandler(1) // 1 total attempt, no retries
-retry_3 := NewRetryHandler(4) // 4 total attempts, or 1 attempt and 3 retries
+no_retry := NewRetryCounter(0) // 1 total attempt, no retries
+retry_3 := NewRetryCounter(3) // 4 total attempts, or 1 attempt and 3 retries
 ----
+
