@@ -47,8 +47,10 @@ Similar to `WriteResponse()` except that an error type must be provided which is
 
 === Service Error
 A lightweight wrapper on the `error` type is provided that allows for the definition of a Service Error.
+It implements the `error` interface and can be used wherever an `error` is appropriate.
 
 A Service Error is simply a structure with a Code and Description and (optionally) an embedded error.
+
 Instantiating a service error is trivial:
 [source,go]
 ----

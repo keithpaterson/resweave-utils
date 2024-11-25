@@ -81,13 +81,14 @@ Since we did not implement `Fetch`, `Delete`, or `Update`, calling those REST me
 Once this has been registered with `resweave`, you can use http requests to list or create Foo objects:
 
 * *List*: `request.NewGetRequest("http://test.org/foo")`
-* *Create*: `request.NewPostRequest("http://test.org/foo").WithJsonBody(Foo{ID: 123, Name: "My Foo"})`
+* *Create*: `request.NewPostRequest("http://test.org/foo", WithJsonBody(Foo{ID: 123, Name: "My Foo"}))`
 * *Fetch*: `request.NewGetRequest("http://test.org/foo/123")`
 * *Delete*: `request.NewDeleteRequest("http://test.org/foo/123")`
-* *Update*: `request.NewPutRequest("http://test.org/foo/123").WithJsonBody(Foo{ID: 123, Name: "My Foo"})`
-** Note that for update, you use Put/Patch as desired and your resource handler's `Update()` function can check the request method
-   to determine which logic to perform.  The `SetUpdateAcceptedMethods()` function may be of interest as
-   this can configure the resource handler to automatically reject Put or Patch if you only want to support one of them.
+* *Update*: `request.NewPutRequest("http://test.org/foo/123", WithJsonBody(Foo{ID: 123, Name: "My Foo"}))`
+** Note that for update, you use Put/Patch requests as desired and your resource handler's `Update()` function can check 
+   the request method to determine which logic to perform.
+   The `SetUpdateAcceptedMethods()` function may be of interest as this can configure the resource handler to automatically
+   reject Put or Patch if you only want to support one of them.
 
 === Non-ID methods
 
