@@ -11,11 +11,6 @@ type retryCounter struct {
 	attempt    int
 }
 
-// maxAttempts is the total number of attempts you want, including retries
-//
-//	so (maxAttempts == 1) => no retries
-//	   (maxAttempts == 2) => 1 retry
-//	   ... and so on
 func NewRetryCounter(maxRetries int) *retryCounter {
 	maxRetries = max(maxRetries, 0)
 	return &retryCounter{maxRetries: maxRetries, attempt: 0}
