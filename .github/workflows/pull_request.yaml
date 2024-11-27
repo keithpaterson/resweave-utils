@@ -1,0 +1,127 @@
+# This workflow will build a golang project
+name: PR Validation
+
+on:
+  pull_request:
+    branches: ["main"]
+
+env:
+  USE_GOVERSION: 1.22
+  BASH_TOOLS_DIR: ./bash_tools
+
+jobs:
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: keithpaterson/bash_tools
+          path: "${{env.BASH_TOOLS_DIR}}"
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "${{env.USE_GOVERSION}}"
+
+      - name: Run Unit Tests
+        run: ./pkg test
+
+      - name: Run Unit Tests with Coverage
+        run: |
+          ./pkg test coverage
+          ls -a ${{ github.workspace }}/.reports/
+
+      - name: Gather Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          include-hidden-files: true
+          name: test-reports
+          path: |
+            ${{ github.workspace }}/.reports/*
+
+  go-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: keithpaterson/bash_tools
+          path: "${{env.BASH_TOOLS_DIR}}"
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "${{env.USE_GOVERSION}}"
+
+      - name: Generate Mocks
+        run: |
+          go install go.uber.org/mock/mockgen@latest
+          ./pkg test generate -v
+
+      - name: Lint Go
+        uses: dominikh/staticcheck-action@v1.3.0
+        with:
+          install-go: false
+          build-tags: testutils
+
+      # TODO(keithpaterson): this is borking in CI, disable for now until we can resolve it
+      #    - name: Run Gosec Security Scanner
+      #      uses: securego/gosec@v2.19.0
+      #      with:
+      #       # we let the report trigger content trigger a failure using the GitHub Security features.
+      #        args: './...'
+
+      - name: Vet Go
+        run: go vet --tags testutils ./...
+
+  resweave-utils-sonar:
+    name: Build and check code
+    needs: [go-test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: keithpaterson/bash_tools
+          path: "${{env.BASH_TOOLS_DIR}}"
+
+      - name: Set version env
+        run: echo "CUR_PROJECT_VERSION=$(./pkg bump -v -s)" >> "$GITHUB_ENV"
+
+      - name: Retrieve Go Code Reports
+        uses: actions/download-artifact@v4
+        with:
+          name: test-reports
+          path: .reports/
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+        with:
+          args: >
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT }}
+            -Dsonar.organization=${{ vars.SONAR_ORG }}
+            -Dsonar.projectVersion=${{ env.CUR_PROJECT_VERSION }}
+            -Dsonar.sourceEncoding=UTF-8
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/*_test.go,**/utility/test/**/*.go,**/vendor/**,**/testing/integration/**/*.go,**/testdata/**/*,**/mocks/**,**/package-lock.json,**/*.tsx
+            -Dsonar.tests=.
+            -Dsonar.test.exclusions=**/vendor/**
+            -Dsonar.test.inclusions=**/*_test.go,**/*.test.tsx
+            -Dsonar.go.coverage.reportPaths=.reports/coverage.out
+            -Dsonar.go.tests.reportPaths=.reports/unit_test.json
+            -Dsonar.javascript.lcov.reportPaths=**/lcov.info
+
+      - name: Archive Code Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-reports
+          path: .reports/

@@ -1,5 +1,30 @@
+:sonar-project-id: keithpaterson_resweave-utils
+:img-quality-gate: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=alert_status
+:img-coverage: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=coverage
+:img-maintainability: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=sqale_rating
+:img-security-rating: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=security_rating
+:img-reliability: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=reliability_rating
+:img-techdebt: https://sonarcloud.io/api/project_badges/measure?project={sonar-project-id}&metric=sqale_index
+:uri-analysis: https://sonarcloud.io/summary/new_code?id={sonar-project-id}
+:resweave-link: https://github.com/mortdedecai/resweave
+
 = Resweave Utilities
-Helpers for easier resource management and other utilities
+Helpers for easier resource management and other utilities.
+
+This project complements https://github.com/mortedecai/resweave[Resweave].
+
+== Project Health
+
+[.text-center]
+
+|===
+|image:{img-quality-gate}[Quality Gate,link={uri-analysis}]|image:{img-coverage}[Coverage,link={uri-analysis}] |image:{img-maintainability}[Maintainability,link={uri-analysis}]
+
+|image:{img-reliability}[Reliability,link={uri-analysis}]
+|image:{img-security-rating}[Security Rating,link={uri-analysis}]
+|image:{img-techdebt}[Technical Debt,link={uri-analysis}]
+
+|===
 
 == Importing
 
@@ -28,10 +53,6 @@ export BASH_TOOLS_DIR="path/to/bash_tools"
 == Tests
 
 To run unit tests you need to include the 'testutils' build tag; the `pkg`` script does that for you.
-
-== Project Health
-
-_TBD_
 
 == Project Status
 
