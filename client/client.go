@@ -19,7 +19,7 @@ var (
 
 // wrapper around net/http/Client
 type httpClient struct {
-	client *http.Client
+	Client *http.Client
 
 	resweave.LogHolder
 	context      context.Context
@@ -65,7 +65,7 @@ func NewHTTPClient(name string) *httpClient {
 }
 
 func newHTTPClient() *httpClient {
-	return &httpClient{client: http.DefaultClient, LogHolder: resweave.NewLogholder("httpClient", nil)}
+	return &httpClient{Client: http.DefaultClient, LogHolder: resweave.NewLogholder("httpClient", nil)}
 }
 
 func (c *httpClient) WithLogger(logger *zap.SugaredLogger) *httpClient {
@@ -90,18 +90,20 @@ func (c *httpClient) WithRetryHandler(retry RetryHandler) *httpClient {
 
 func (c *httpClient) Execute(req *http.Request) (*http.Response, error) {
 	if c.backoff != nil {
-		c.client.Timeout = c.backoff.Timeout()
+		c.Client.Timeout = c.backoff.Timeout()
 		c.backoff.Reset()
 	}
 	if c.retryHandler != nil {
 		c.retryHandler.Reset()
 	}
 
-	var err error // keep the last error
+	var lastErr error // keep the last error
 	var resp *http.Response
 	for c.retryHandler.SafeToRetry() {
+		var err error
 		resp, err = c.tryDoRequest(req)
 		if err != nil {
+			lastErr = err
 			if c.isTerminalError(err) {
 				return nil, err
 			}
@@ -115,7 +117,7 @@ func (c *httpClient) Execute(req *http.Request) (*http.Response, error) {
 		}
 		return resp, nil
 	}
-	return nil, fmt.Errorf("%w: %s: last error: %w", ErrRequestTimeout, c.retryHandler.State(), err)
+	return nil, fmt.Errorf("%w: %s: last error: %w", ErrRequestTimeout, c.retryHandler.State(), lastErr)
 }
 
 func (c *httpClient) tryDoRequest(req *http.Request) (*http.Response, error) {
@@ -123,7 +125,7 @@ func (c *httpClient) tryDoRequest(req *http.Request) (*http.Response, error) {
 	var resp *http.Response
 	done := make(chan struct{})
 	go func() {
-		resp, err = c.client.Do(req)
+		resp, err = c.Client.Do(req)
 		done <- struct{}{}
 	}()
 
