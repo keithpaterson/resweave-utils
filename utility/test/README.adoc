@@ -57,7 +57,7 @@ var _ = Describe("Test Foo Resource", func() {
 
         // Note that you'll need to be able to tell the FooResource class what the host name is, because
         // the test service may use a different port for each test (so tests can run concurrently)
-        fooResource := &FooResource{host: host, ...} // whatever init is required for the resource object
+        fooClient := &FooClient{host: host, ...} // whatever init is required for the client object
         resFoo, err := fooResource.Fetch(context.TODO(), 123)
 
         Expect(err).ToNot(HaveOccurred())
