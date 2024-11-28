@@ -48,6 +48,7 @@ menu_engine_install_and_update() {
       # update
       echo "Updating script tools ..."
       ( cd ${_root}; git pull origin main )
+      exit 0
     fi
   else
     # install
