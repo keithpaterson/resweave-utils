@@ -21,7 +21,7 @@ type httpService struct {
 	path           string
 	reqBody        []byte
 	timeoutCounter int
-	timeoutC       chan bool
+	timeoutC       chan struct{}
 
 	// emit response:
 	status       int
@@ -132,7 +132,8 @@ func (s *httpService) GetCallCount() int {
 // The service tearDown function will call this automatically
 func (s *httpService) ReleaseTimeoutHold() {
 	if s.timeoutC != nil {
-		s.timeoutC <- true
+		c := s.timeoutC
+		defer close(c)
 		s.timeoutC = nil
 	}
 }
@@ -162,7 +163,7 @@ func (s *httpService) Start() (string, func()) {
 
 		writer := response.NewWriter(w)
 		if s.callCounter <= s.timeoutCounter {
-			s.timeoutC = make(chan bool)
+			s.timeoutC = make(chan struct{})
 			// block until we are released
 			<-s.timeoutC
 			return
