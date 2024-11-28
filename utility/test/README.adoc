@@ -22,7 +22,7 @@ logic; for that you will want to write integration tests that won't use this cla
 
 For example:
 
-Assume you have a resource class `FooResource` that emits a Get request to retrieve a specific `Foo` based on an ID.
+Assume you have an xref:../../resource/README.adoc[EasyResource] class `FooResource` that implements a `Fetch` handler to retrieve a specific `Foo` based on an ID.
 [source,go]
 ----
 func (fr *FooResource) Fetch(_ context.Context, id int) (FooResponse, error) {
