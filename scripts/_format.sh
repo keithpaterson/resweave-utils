@@ -2,7 +2,7 @@ using colors
 
 run_format_usage() {
   echo "  where $(color -bold op) is:"
-  echo "    $(color -lt_green \<empty\>):  format source files"
+  echo "    $(color -lt_green \<empty\>) :  format source files"
 }
 
 run_format() {

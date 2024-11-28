@@ -5,8 +5,8 @@ _lint_report_file=${_lint_report_dir}/lint-report.json
 
 run_lint_usage() {
   echo "  where $(color -bold op) is:"
-  echo "    $(color -lt_green \<empty\>):  run the linter"
-  echo "    $(color -lt_green report): run the linter and generate a json report"
+  echo "    $(color -lt_green \<empty\>) : run the linter"
+  echo "    $(color -lt_green report)  : run the linter and generate a json report"
   echo "      lint reports will be found in '${_lint_report_dir}'"
 }
 

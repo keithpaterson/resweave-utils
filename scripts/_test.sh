@@ -5,9 +5,9 @@ _test_report_dir=${_root_dir}/.reports
 ## original
 run_test_usage() {
   echo "  where $(color -bold op) is:"
-  echo "    $(color -lt_green \<empty\>):  run unit tests"
-  echo "    $(color -lt_green coverage): run unit tests and generate coverage"
-  echo "    $(color -lt_green generate): generate mocks"
+  echo "    $(color -lt_green \<empty\>)  :  run unit tests"
+  echo "    $(color -lt_green coverage) : run unit tests and generate coverage"
+  echo "    $(color -lt_green generate) : generate mocks"
   echo "      coverage reports will be found in '${_test_report_dir}'"
 }
 
