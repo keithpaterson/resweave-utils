@@ -40,6 +40,7 @@ run_linter() {
 }
 
 _unit_tests() {
+  _run build test
   echo "Running unit tests..."
   mkdir -p ${_test_report_dir}
   _test_check_and_install_ginkgo
@@ -52,18 +53,19 @@ _unit_tests() {
 }
 
 _unit_coverage() {
-    echo "generating test coverage..."
-    mkdir -p ${_test_report_dir}
-    rm -f ${_test_report_dir}/coverage.raw.out ${_test_report_dir}/coverage.out
-    go test --tags testutils --test.coverprofile ${_test_report_dir}/coverage.raw.out ./... | grep -v mocks 
-    local _result=$?
+  _run build test
+  echo "generating test coverage..."
+  mkdir -p ${_test_report_dir}
+  rm -f ${_test_report_dir}/coverage.raw.out ${_test_report_dir}/coverage.out
+  go test --tags testutils --test.coverprofile ${_test_report_dir}/coverage.raw.out ./... | grep -v mocks 
+  local _result=$?
 
-    # filter out mocks directories from coverage
-    grep -vE 'mocks/|utility/test/' ${_test_report_dir}/coverage.raw.out > ${_test_report_dir}/coverage.out
-    go tool cover -html=${_test_report_dir}/coverage.out -o ${_test_report_dir}/coverage.html
-    if [ ${_result} -ne 0 ]; then
-        exit ${_result}
-    fi
+  # filter out mocks directories from coverage
+  grep -vE 'mocks/|utility/test/' ${_test_report_dir}/coverage.raw.out > ${_test_report_dir}/coverage.out
+  go tool cover -html=${_test_report_dir}/coverage.out -o ${_test_report_dir}/coverage.html
+  if [ ${_result} -ne 0 ]; then
+      exit ${_result}
+  fi
 }
 
 _generate_mocks() {
