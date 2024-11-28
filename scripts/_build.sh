@@ -2,8 +2,8 @@ using colors
 
 run_build_usage() {
   echo "  where $(color -bold op) is:"
-  echo "    $(color -lt_green \<empty\>):  build the library"
-  echo "    $(color -lt_green test): build the library for test"
+  echo "    $(color -lt_green \<empty\>) : build the library"
+  echo "    $(color -lt_green test)    : build the library for test"
 }
 
 run_build() {
