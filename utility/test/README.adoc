@@ -22,10 +22,10 @@ logic; for that you will want to write integration tests that won't use this cla
 
 For example:
 
-Assume you have an xref:../../resource/README.adoc[EasyResource] class `FooResource` that implements a `Fetch` handler to retrieve a specific `Foo` based on an ID.
+Assume you have a FooClient that emits a Get request to fetch a specific `Foo` based on an ID.
 [source,go]
 ----
-func (fr *FooResource) Fetch(_ context.Context, id int) (FooResponse, error) {
+func (fr *FooClient) Fetch(_ context.Context, id int) (FooResponse, error) {
     req := request.NewGetRequest(fr.host + "/foo/" + id)
     httpClient := client.DefaultHTTPClient() // more likely this is a member but for clarity here it is.
     resp, err := httpClient.Execute(req)
@@ -34,7 +34,7 @@ func (fr *FooResource) Fetch(_ context.Context, id int) (FooResponse, error) {
     }
 
     var respFoo FooResponse
-    err = request.ParseResponseJsonData(resp, http.StatusOK, &respFoo)
+    err = response.ParseResponseJsonData(resp, http.StatusOK, &respFoo)
     return respFoo, err
 }
 ----
