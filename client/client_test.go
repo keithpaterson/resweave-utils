@@ -176,7 +176,7 @@ var _ = Describe("Client", func() {
 				svc := test.HttpService().
 					WithMethod(http.MethodGet).
 					WithPath("/test").
-					WithTimeouts(svcTimeouts, 2*time.Millisecond).
+					WithTimeouts(svcTimeouts).
 					ReturnStatusCode(http.StatusOK)
 				host, tearDown := svc.Start()
 				defer tearDown()
@@ -210,7 +210,7 @@ var _ = Describe("Client", func() {
 			svc := test.HttpService().
 				WithMethod(http.MethodGet).
 				WithPath("/test").
-				WithTimeouts(1, time.Minute).
+				WithTimeouts(1).
 				ReturnStatusCode(http.StatusOK)
 			host, tearDown := svc.Start()
 			defer tearDown()

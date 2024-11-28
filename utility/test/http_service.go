@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	"github.com/keithpaterson/resweave-utils/header"
 	"github.com/keithpaterson/resweave-utils/response"
@@ -22,7 +21,7 @@ type httpService struct {
 	path           string
 	reqBody        []byte
 	timeoutCounter int
-	timeoutDelay   time.Duration
+	timeoutC       chan bool
 
 	// emit response:
 	status       int
@@ -54,9 +53,19 @@ func (s *httpService) WithBody(body interface{}) *httpService {
 	return s.WithJsonBody(body)
 }
 
-func (s *httpService) WithTimeouts(count int, delay time.Duration) *httpService {
+// The first (count) requests will hold until released; this will induce the client to
+// time out.
+//
+// Initiating a new request will release the previously held request.
+// Held requests will also be released automatically in the `tearDown` function
+//
+// This allows a client to test it's try/retry handling.
+//
+// This does mean that  you can't initiate multiple concurrent requests with timeouts
+// and expect them to work; the intent here is to allow testing that a client will
+// try/retry/timeout a single request (or try/retry/succeed for the success case).
+func (s *httpService) WithTimeouts(count int) *httpService {
 	s.timeoutCounter = count
-	s.timeoutDelay = delay
 	return s
 }
 
@@ -112,9 +121,20 @@ func (s *httpService) ReturnJsonBody(object interface{}) *httpService {
 	return s
 }
 
-// Post-execution checks
 func (s *httpService) GetCallCount() int {
 	return s.callCounter
+}
+
+// Post-execution: clear a timeout
+// If you are testing with intentional timeouts, this clears the timeout hold
+// So that you can run the next test
+//
+// The service tearDown function will call this automatically
+func (s *httpService) ReleaseTimeoutHold() {
+	if s.timeoutC != nil {
+		s.timeoutC <- true
+		s.timeoutC = nil
+	}
 }
 
 // returns the host url ("http://localhost:port") and a function you use to tear down the service
@@ -129,6 +149,7 @@ func (s *httpService) GetCallCount() int {
 func (s *httpService) Start() (string, func()) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer GinkgoRecover()
+		s.ReleaseTimeoutHold()
 		s.callCounter++
 
 		Expect(r.Method).To(Equal(s.method))
@@ -141,9 +162,9 @@ func (s *httpService) Start() (string, func()) {
 
 		writer := response.NewWriter(w)
 		if s.callCounter <= s.timeoutCounter {
-			// block (?)
-			<-time.NewTicker(s.timeoutDelay).C
-			// or just return without touching the writer?
+			s.timeoutC = make(chan bool)
+			// block until we are released
+			<-s.timeoutC
 			return
 		}
 
@@ -153,7 +174,11 @@ func (s *httpService) Start() (string, func()) {
 			writer.WriteResponse(s.status)
 		}
 	}))
-	tearDownFn := func() { server.Close() }
+	tearDownFn := func() {
+		s.ReleaseTimeoutHold()
+		server.CloseClientConnections()
+		server.Close()
+	}
 
 	return server.URL, tearDownFn
 }
