@@ -16,7 +16,7 @@ run_test() {
   shift
 
   case ${_op} in
-    "")
+    ""|unit)
       _unit_tests $*
       ;;
     coverage)
@@ -44,7 +44,7 @@ _unit_tests() {
   echo "Running unit tests..."
   mkdir -p ${_test_report_dir}
   _test_check_and_install_ginkgo
-  ginkgo --tags testutils --repeat 1 -r --output-dir ${_test_report_dir} --json-report unit_tests.json ./... > ${_test_report_dir}/unit_tests.log 2>&1
+  ginkgo --tags testutils --repeat 1 -r --output-dir ${_test_report_dir} --json-report unit_tests.json $* ./... > ${_test_report_dir}/unit_tests.log 2>&1
   local _result=$?
   cat ${_test_report_dir}/unit_tests.log
   if [ ${_result} -ne 0 ]; then

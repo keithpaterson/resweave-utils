@@ -183,7 +183,8 @@ var _ = Describe("Client", func() {
 
 				client := NewTestHTTPClient().
 					WithRetryHandler(NewRetryCounter(clientRetries)).
-					WithBackoff(StaticBackoff(time.Millisecond))
+					// anecdotal testing implies a 5ms timeout is compatible with the client/servier processing under test
+					WithBackoff(StaticBackoff(5 * time.Millisecond))
 				req, err := request.NewGetRequest(host + "/test")
 				Expect(err).ToNot(HaveOccurred())
 
