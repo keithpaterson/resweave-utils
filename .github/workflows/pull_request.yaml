@@ -6,7 +6,7 @@ on:
     branches: ["main"]
 
 env:
-  USE_GOVERSION: 1.22
+  USE_GOVERSION: "^1.23"
   BASH_TOOLS_DIR: ./bash_tools
 
 jobs:
