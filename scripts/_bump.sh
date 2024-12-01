@@ -82,8 +82,8 @@ run_bump() {
   local _alpha=$(echo "${_current_version}" | sed -E "s/^v?[[:digit:]]+\.[[:digit:]]+\.[[:digit:]]+-alpha-[[:digit:]]+\.([[:digit:]]+).*$/\1/g")
 
   if [ -n "${_debug}" ]; then
-    echo -e "Major Version: ${_major}\nMinor Version: ${_minor}\nPatch Version: ${_patch}\nAlpha Version: ${_alpha}\nAlpha Date: ${_alpha_date}\n"
-    echo -e "Assembled    : ${_major}.${_minor}.${_patch}-alpha-${_alpha_date}.${_alpha}"
+    echo "Major Version: ${_major}\nMinor Version: ${_minor}\nPatch Version: ${_patch}\nAlpha Version: ${_alpha}\nAlpha Date: ${_alpha_date}\n"
+    echo "Assembled    : ${_major}.${_minor}.${_patch}-alpha-${_alpha_date}.${_alpha}"
   fi
 
   local _new_date=$(date '+%m%d%y')
@@ -144,5 +144,5 @@ run_bump() {
 _bump_verbose_message() {
   [ -z "${_bump_verbose}" ] && return
 
-  echo -e $*
+  echo $*
 }
