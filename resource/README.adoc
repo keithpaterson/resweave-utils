@@ -2,10 +2,10 @@
 
 This package provides a Resource wrapper that is used with `resweave` to speed up implementation for resource objects.
 
-== class EasyResource
+== struct EasyResource
 
-This class is encapsulates your resource object and handles the basic request processing before calling handler functions
-provided by your implementation.
+This struct encapsulates your resource object implementation and handles the basic request processing before calling
+the handler functions provided by your implementation.
 
 Your resource object only has to implement the REST functions necessary for that object.  Any functions that you don't
 (need to) support can be omitted entirely.
