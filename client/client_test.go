@@ -19,7 +19,7 @@ type testClientData struct {
 	Count int    `json:"count"`
 }
 
-func NewTestHTTPClient() *httpClient {
+func newTestHTTPClient() *httpClient {
 	return NewHTTPClient("Test HTTP Client").WithLogger(zap.NewNop().Sugar())
 }
 
@@ -50,126 +50,113 @@ func verifyResponseBody(resp *http.Response, expect interface{}) {
 	}
 }
 
+type newNoBodyRequestFn func(string) (*http.Request, error)
+
+func getNoBodyRequestFunction(method string) newNoBodyRequestFn {
+	switch method {
+	case http.MethodGet:
+		return request.NewGetRequest
+	case http.MethodDelete:
+		return request.NewDeleteRequest
+	default:
+		Fail("Unexpected method: " + method)
+	}
+	return nil
+}
+
+type newBodyRequestFn func(string, request.BodyDataProvider) (*http.Request, error)
+
+func getBodyRequestFunction(method string) newBodyRequestFn {
+	switch method {
+	case http.MethodPost:
+		return request.NewPostRequest
+	case http.MethodPut:
+		return request.NewPutRequest
+	case http.MethodPatch:
+		return request.NewPatchRequest
+	default:
+		Fail("Unexpected method: " + method)
+	}
+	return nil
+}
+
 var _ = Describe("Client", func() {
 	Context("Execute", func() {
-		// body provider that decides whether data is byte or json.
 
-		DescribeTable("Method GET",
-			func(path string, status int, respBody interface{}) {
-				// Arrange
-				svc := test.HttpService().
-					WithMethod(http.MethodGet).
-					WithPath(path).
-					ReturnStatusCode(status).
-					ReturnBody(respBody)
-				host, tearDown := svc.Start()
-				defer tearDown()
+		// These tests are the same for GET and DELETE...
+		for _, method := range []string{http.MethodGet, http.MethodDelete} {
+			DescribeTable("Method "+method,
+				func(path string, status int, respBody interface{}) {
+					// Arrange
+					svc := test.HttpService().
+						WithMethod(method).
+						WithPath(path).
+						ReturnStatusCode(status).
+						ReturnBody(respBody)
+					host, tearDown := svc.Start()
+					defer tearDown()
 
-				client := NewTestHTTPClient()
-				req, err := request.NewGetRequest(host + path)
-				Expect(err).ToNot(HaveOccurred())
+					req, err := getNoBodyRequestFunction(method)(host + path)
+					Expect(err).ToNot(HaveOccurred())
 
-				// Act
-				resp, err := client.Execute(req)
+					client := newTestHTTPClient()
 
-				// Assert
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(status))
-				verifyResponseBody(resp, respBody)
-			},
-			Entry("with no response body succeeds", "/test", http.StatusOK, nil),
-			Entry("with response body succeeds", "/test", http.StatusOK, testClientData{"foo", 10}),
-			Entry("with response error body succeeds", "/test", http.StatusForbidden, response.SvcErrorInvalidMethod),
-		)
-		DescribeTable("Method PUT",
-			func(path string, reqBody interface{}, status int, respBody interface{}) {
-				// Arrange
-				svc := test.HttpService().
-					WithMethod(http.MethodPut).
-					WithPath(path).
-					WithBody(reqBody).
-					ReturnStatusCode(status).
-					ReturnBody(respBody)
-				host, tearDown := svc.Start()
-				defer tearDown()
+					// Act
+					resp, err := client.Execute(req)
+					if resp != nil {
+						defer resp.Body.Close()
+					}
 
-				client := NewTestHTTPClient()
-				req, err := request.NewPutRequest(host+path, withAutoBody(reqBody))
-				Expect(err).ToNot(HaveOccurred())
+					// Assert
+					Expect(err).ToNot(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(status))
+					verifyResponseBody(resp, respBody)
+				},
+				Entry("with no response body succeeds", "/test", http.StatusOK, nil),
+				Entry("with response body succeeds", "/test", http.StatusOK, testClientData{"foo", 10}),
+				Entry("with response error body succeeds", "/test", http.StatusForbidden, response.SvcErrorInvalidMethod),
+			)
+		}
 
-				// Act
-				resp, err := client.Execute(req)
+		// These tests are the same for POST, PUT and PATCH...
+		for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodPatch} {
+			DescribeTable("Method "+method,
+				func(path string, reqBody interface{}, status int, respBody interface{}) {
+					// Arrange
+					svc := test.HttpService().
+						WithMethod(method).
+						WithPath(path).
+						WithBody(reqBody).
+						ReturnStatusCode(status).
+						ReturnBody(respBody)
+					host, tearDown := svc.Start()
+					defer tearDown()
 
-				// Assert
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(status))
-				verifyResponseBody(resp, respBody)
-			},
-			Entry("with no request body and no response body succeeds", "/test", nil, http.StatusOK, nil),
-			Entry("with no request body and response body succeeds", "/test", nil, http.StatusOK, testClientData{"foo", 10}),
-			Entry("with no request body and response error body succeeds", "/test", nil, http.StatusForbidden, response.SvcErrorInvalidMethod),
-			Entry("with request body and no response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, nil),
-			Entry("with request body and response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, testClientData{"bar", 99}),
-			Entry("with request body and response error body succeeds", "/test", testClientData{"foo", 10}, http.StatusForbidden, response.SvcErrorInvalidMethod),
-		)
-		DescribeTable("Method POST",
-			func(path string, reqBody interface{}, status int, respBody interface{}) {
-				// Arrange
-				svc := test.HttpService().
-					WithMethod(http.MethodPost).
-					WithPath(path).
-					WithBody(reqBody).
-					ReturnStatusCode(status).
-					ReturnBody(respBody)
-				host, tearDown := svc.Start()
-				defer tearDown()
+					req, err := getBodyRequestFunction(method)(host+path, withAutoBody(reqBody))
+					Expect(err).ToNot(HaveOccurred())
 
-				client := NewTestHTTPClient()
-				req, err := request.NewPostRequest(host+path, withAutoBody(reqBody))
-				Expect(err).ToNot(HaveOccurred())
+					client := newTestHTTPClient()
 
-				// Act
-				resp, err := client.Execute(req)
+					// Act
+					resp, err := client.Execute(req)
+					if resp != nil {
+						defer resp.Body.Close()
+					}
 
-				// Assert
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(status))
-				verifyResponseBody(resp, respBody)
-			},
-			Entry("with no request body and no response body succeeds", "/test", nil, http.StatusOK, nil),
-			Entry("with no request body and response body succeeds", "/test", nil, http.StatusOK, testClientData{"foo", 10}),
-			Entry("with no request body and response error body succeeds", "/test", nil, http.StatusForbidden, response.SvcErrorInvalidMethod),
-			Entry("with request body and no response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, nil),
-			Entry("with request body and response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, testClientData{"bar", 99}),
-			Entry("with request body and response error body succeeds", "/test", testClientData{"foo", 10}, http.StatusForbidden, response.SvcErrorInvalidMethod),
-		)
-		DescribeTable("Method DELETE",
-			func(path string, reqBody interface{}, status int, respBody interface{}) {
-				// Arrange
-				svc := test.HttpService().
-					WithMethod(http.MethodDelete).
-					WithPath(path).
-					ReturnStatusCode(status).
-					ReturnBody(respBody)
-				host, tearDown := svc.Start()
-				defer tearDown()
+					// Assert
+					Expect(err).ToNot(HaveOccurred())
+					Expect(resp.StatusCode).To(Equal(status))
+					verifyResponseBody(resp, respBody)
+				},
+				Entry("with no request body and no response body succeeds", "/test", nil, http.StatusOK, nil),
+				Entry("with no request body and response body succeeds", "/test", nil, http.StatusOK, testClientData{"foo", 10}),
+				Entry("with no request body and response error body succeeds", "/test", nil, http.StatusForbidden, response.SvcErrorInvalidMethod),
+				Entry("with request body and no response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, nil),
+				Entry("with request body and response body succeeds", "/test", testClientData{"foo", 10}, http.StatusOK, testClientData{"bar", 99}),
+				Entry("with request body and response error body succeeds", "/test", testClientData{"foo", 10}, http.StatusForbidden, response.SvcErrorInvalidMethod),
+			)
+		}
 
-				client := NewTestHTTPClient()
-				req, err := request.NewDeleteRequest(host + path)
-				Expect(err).ToNot(HaveOccurred())
-
-				// Act
-				resp, err := client.Execute(req)
-
-				// Assert
-				Expect(err).ToNot(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(status))
-				verifyResponseBody(resp, respBody)
-			},
-			Entry("with no response body succeeds", "/test", nil, http.StatusOK, nil),
-			Entry("with response body succeeds", "/test", nil, http.StatusOK, testClientData{"foo", 10}),
-			Entry("with response error body succeeds", "/test", nil, http.StatusForbidden, response.SvcErrorInvalidMethod),
-		)
 		DescribeTable("Timeout with Retry",
 			func(svcTimeouts int, clientRetries int, expectTimeout bool) {
 				// Arrange
@@ -181,7 +168,7 @@ var _ = Describe("Client", func() {
 				host, tearDown := svc.Start()
 				defer tearDown()
 
-				client := NewTestHTTPClient().
+				client := newTestHTTPClient().
 					WithRetryHandler(NewRetryCounter(clientRetries)).
 					// anecdotal testing implies a 5ms timeout is compatible with the client/servier processing under test
 					WithBackoff(StaticBackoff(5 * time.Millisecond))
@@ -190,6 +177,9 @@ var _ = Describe("Client", func() {
 
 				// Act.
 				resp, err := client.Execute(req)
+				if resp != nil {
+					defer resp.Body.Close()
+				}
 
 				// Assert
 				if expectTimeout {
@@ -225,7 +215,10 @@ var _ = Describe("Client", func() {
 				<-time.After(time.Microsecond)
 				client.Cancel()
 			}()
-			_, err = client.Execute(req)
+			resp, err := client.Execute(req)
+			if resp != nil {
+				defer resp.Body.Close()
+			}
 
 			// Assert
 			Expect(err).To(MatchError(context.Canceled))
