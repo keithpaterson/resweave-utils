@@ -5,7 +5,7 @@ Helpers for easier resource management and other utilities
 
 To import this project you need this command-line:
 ```
-GOPRIVATE=github.com/keithpaterson/resweave-utils go get github.com/keithpaterson/resweave-utils
+go get github.com/keithpaterson/resweave-utils
 ```
 
 === Dependencies
