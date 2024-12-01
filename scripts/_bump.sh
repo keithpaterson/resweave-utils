@@ -16,7 +16,7 @@ run_bump() {
   local _project_root=
   local _version="alpha"
   local _include_alpha=yes
-  local _dry_run=yes
+  local _dry_run=
   local _print_version=
   local _debug=
 
