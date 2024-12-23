@@ -51,14 +51,14 @@ func (fr *FooResource) List(_ context.Context, writer resource.ResponseWriter, _
     defer fr.mtx.Unlock()
 
     if err := writer.WriteJsonResponse(http.StatusOK, fr.foos); err != nil {
-        fr.Errorw("List", "Status", "error", "Error", err)
+        fr.NewError("List", err).Log()
     }
 }
 
 func (fr *FooResource) Create(_context.Context, writer resource.ResponseWriter, req *http.Request) {
     var input Foo
     if err := rw.UnmarshalJson(req.Body, &input); err != nil {
-        fr.Errorw("Create", "Status", "read error", "Error", err)
+        fr.NewError("Create", err).Log()
         writer.WriteErrorResponse(http.StatusBadRequest, response.SvrErrorReadRequestFailed.WithError(err))
     }
 
@@ -70,7 +70,7 @@ func (fr *FooResource) Create(_context.Context, writer resource.ResponseWriter, 
 
     fr.foos = append(fr.foos, foo)
     if err := writerWriteJsonResponse(http.StatusOK, foo); err != nil {
-        fr.Errorw("Create", "Status", "write error", "Error", err)
+        fr.NewError("Create", err)
     }
 }
 ----
