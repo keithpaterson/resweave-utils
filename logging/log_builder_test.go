@@ -38,7 +38,7 @@ var _ = Describe("LogBuilder", func() {
 			entry := logs.All()[0]
 			Expect(entry.Level).To(Equal(zapcore.InfoLevel))
 			Expect(entry.Message).To(Equal("logfunc"))
-			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{"Status": "was-logged"}))
+			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{LogKeyStatus: "was-logged"}))
 		})
 		It("should be able to log simple error messages", func() {
 			// Arrange
@@ -52,7 +52,7 @@ var _ = Describe("LogBuilder", func() {
 			entry := logs.All()[0]
 			Expect(entry.Level).To(Equal(zapcore.ErrorLevel))
 			Expect(entry.Message).To(Equal("logfunc"))
-			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{"Status": "error", "Error": "log error"}))
+			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{LogKeyStatus: LogStatusError, LogKeyError: "log error"}))
 		})
 		It("should be able to log complex error messages", func() {
 			// Arrange
@@ -66,7 +66,7 @@ var _ = Describe("LogBuilder", func() {
 			entry := logs.All()[0]
 			Expect(entry.Level).To(Equal(zapcore.ErrorLevel))
 			Expect(entry.Message).To(Equal("logfunc"))
-			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{"Status": "error", "Error": "failed to foo: log error"}))
+			Expect(entry.ContextMap()).To(Equal(map[string]interface{}{LogKeyStatus: LogStatusError, LogKeyError: "failed to foo: log error"}))
 		})
 		It("should be able to log debug messages", func() {
 			// Arrange
@@ -113,10 +113,10 @@ var _ = Describe("LogBuilder", func() {
 			},
 			Entry("info with status", logTypeInfo,
 				func(b *logBuilder) { b.WithStatus("logged") },
-				map[string]interface{}{"Status": "logged"}),
+				map[string]interface{}{LogKeyStatus: "logged"}),
 			Entry("info with status and custom value", logTypeInfo,
 				func(b *logBuilder) { b.WithStatus("logged").With("key", "value") },
-				map[string]interface{}{"Status": "logged", "key": "value"}),
+				map[string]interface{}{LogKeyStatus: "logged", "key": "value"}),
 			Entry("info with custom value", logTypeInfo,
 				func(b *logBuilder) { b.With("key", "value") },
 				map[string]interface{}{"key": "value"}),
@@ -126,22 +126,22 @@ var _ = Describe("LogBuilder", func() {
 				map[string]interface{}{"key": "value", "another": "value"}),
 			Entry("error with error", logTypeInfo,
 				func(b *logBuilder) { b.WithError(errors.New("failed")) },
-				map[string]interface{}{"Error": "failed"}),
+				map[string]interface{}{LogKeyError: "failed"}),
 			Entry("error with error and resource", logTypeInfo,
 				func(b *logBuilder) { b.WithError(errors.New("failed")).WithResource("foo-resource") },
-				map[string]interface{}{"Error": "failed", "Resource": "foo-resource"}),
+				map[string]interface{}{LogKeyError: "failed", LogKeyResource: "foo-resource"}),
 			Entry("error with error message", logTypeInfo,
 				func(b *logBuilder) { b.WithErrorMessage(errors.New("failed"), "tried") },
-				map[string]interface{}{"Error": "tried: failed"}),
+				map[string]interface{}{LogKeyError: "tried: failed"}),
 			Entry("error with error and custom value", logTypeInfo,
 				func(b *logBuilder) { b.WithError(errors.New("failed")).With("attempt", 1) },
-				map[string]interface{}{"Error": "failed", "attempt": int64(1)}),
+				map[string]interface{}{LogKeyError: "failed", "attempt": int64(1)}),
 			Entry("incorrect type logs an error", logType(-1),
 				func(b *logBuilder) { /* no extra logs */ },
-				map[string]interface{}{"LogFault": "unsupported log type"}),
+				map[string]interface{}{logKeyLogFault: "unsupported log type"}),
 			Entry("incorrect type with custom values logs an error", logType(-1),
 				func(b *logBuilder) { b.WithStatus("pooched").WithResource("foo-res").With("not", "unusual") },
-				map[string]interface{}{"LogFault": "unsupported log type", "Status": "pooched", "Resource": "foo-res", "not": "unusual"}),
+				map[string]interface{}{logKeyLogFault: "unsupported log type", LogKeyStatus: "pooched", LogKeyResource: "foo-res", "not": "unusual"}),
 		)
 	})
 

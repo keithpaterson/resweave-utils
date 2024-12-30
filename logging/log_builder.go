@@ -6,24 +6,43 @@ import (
 	"github.com/mortedecai/resweave"
 )
 
+type LogKey string
+type LogValue interface{}
+
+// well-known logging keys
+const (
+	LogKeyStatus   = "status"
+	LogKeyError    = "error"
+	LogKeyResource = "resource"
+
+	logKeyLogFault = "logFault"
+)
+
+// well-known logging values (mainly status values)
+const (
+	LogStatusStarted   = "started"
+	LogStatusCompleted = "completed"
+	LogStatusError     = "error"
+)
+
 type LogFactory struct {
 	resweave.LogHolder
 }
 
-func (b LogFactory) NewInfo(funcName string, status string) *logBuilder {
+func (b LogFactory) NewInfo(funcName string, status LogValue) *logBuilder {
 	return newLogBuilder(b, logTypeInfo, funcName).
 		WithStatus(status)
 }
 
 func (b LogFactory) NewError(funcName string, err error) *logBuilder {
 	return newLogBuilder(b, logTypeError, funcName).
-		WithStatus("error").
+		WithStatus(LogStatusError).
 		WithError(err)
 }
 
 func (b LogFactory) NewErrorMessage(funcName string, err error, msg string) *logBuilder {
 	return newLogBuilder(b, logTypeError, funcName).
-		WithStatus("error").
+		WithStatus(LogStatusError).
 		WithErrorMessage(err, msg)
 }
 
@@ -32,11 +51,11 @@ func (b LogFactory) NewDebug(funcName string) *logBuilder {
 }
 
 type LogBuilder interface {
-	WithStatus(status string) LogBuilder
+	WithStatus(status LogValue) LogBuilder
 	WithResource(name resweave.ResourceName) LogBuilder
 	WithError(err error) LogBuilder
 	WithErrorMessage(err error, msg string) LogBuilder
-	With(name string, value interface{}) LogBuilder
+	With(name LogKey, value LogValue) LogBuilder
 	Log()
 }
 
@@ -60,24 +79,24 @@ func newLogBuilder(logHolder resweave.LogHolder, logType logType, funcName strin
 	return &logBuilder{LogHolder: logHolder, logType: logType, funcName: funcName}
 }
 
-func (b *logBuilder) WithStatus(status string) *logBuilder {
-	return b.With("Status", status)
+func (b *logBuilder) WithStatus(status LogValue) *logBuilder {
+	return b.With(LogKeyStatus, status)
 }
 
 func (b *logBuilder) WithResource(name resweave.ResourceName) *logBuilder {
-	return b.With("Resource", name)
+	return b.With(LogKeyResource, name)
 }
 
 func (b *logBuilder) WithError(err error) *logBuilder {
-	return b.With("Error", err)
+	return b.With(LogKeyError, err)
 }
 
 func (b *logBuilder) WithErrorMessage(err error, msg string) *logBuilder {
 	return b.WithError(fmt.Errorf("%s: %w", msg, err))
 }
 
-func (b *logBuilder) With(name string, value interface{}) *logBuilder {
-	b.params = append(b.params, name, value)
+func (b *logBuilder) With(name LogKey, value LogValue) *logBuilder {
+	b.params = append(b.params, string(name), value)
 	return b
 }
 
@@ -90,6 +109,6 @@ func (b *logBuilder) Log() {
 	case logTypeDebug:
 		b.Debugw(b.funcName, b.params...)
 	default:
-		b.Errorw(b.funcName, append([]interface{}{"LogFault", "unsupported log type"}, b.params...)...)
+		b.Errorw(b.funcName, append([]interface{}{logKeyLogFault, "unsupported log type"}, b.params...)...)
 	}
 }
