@@ -50,15 +50,6 @@ func (b LogFactory) NewDebug(funcName string) *logBuilder {
 	return newLogBuilder(b, logTypeDebug, funcName)
 }
 
-type LogBuilder interface {
-	WithStatus(status LogValue) LogBuilder
-	WithResource(name resweave.ResourceName) LogBuilder
-	WithError(err error) LogBuilder
-	WithErrorMessage(err error, msg string) LogBuilder
-	With(name LogKey, value LogValue) LogBuilder
-	Log()
-}
-
 type logType int
 
 const (

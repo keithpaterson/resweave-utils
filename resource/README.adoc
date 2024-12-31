@@ -70,7 +70,7 @@ func (fr *FooResource) Create(_context.Context, writer resource.ResponseWriter, 
 
     fr.foos = append(fr.foos, foo)
     if err := writerWriteJsonResponse(http.StatusOK, foo); err != nil {
-        fr.NewError("Create", err)
+        fr.NewError("Create", err).Log()
     }
 }
 ----

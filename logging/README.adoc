@@ -1,0 +1,104 @@
+= Logging package
+
+== struct LogFactory
+
+This object is embedded in an EasyResource and makes it possible to easily and consistently
+build contextual error messages using a fluent-style interface.
+
+This introduces the `LogKey` and `LogValue` types, which denote a logged key/value pairing.
+
+There are some built-in keys and values, but you can create your own as well:
+
+Keys:
+
+* `LogKeyStatus` = "status"
+* `LogKeyError` = "error"
+* `LogKeyResource` = "resource"
+
+Values:
+
+* `LogStatusStarted` = "started"
+* `LogStatusCompleted` = "completed"
+* `LogStatusError` = "error"
+
+Keep in mind that `resweave` uses the sugared `zap` logger, so log information is provided in JSON key/value pairs, so your Key values should be JSON-compatible.
+
+The `resweave.LogHolder` logging functions are mapped by the `LogFactory` to builder objects that will
+configure a log message: 
+
+=== `NewInfo(funcName string, status LogValue)`
+returns a builder for `Info` logs
+
+* Info logs always contain a "status" field using the value provided.
+
+=== `NewError(funcName string, err error)`
+returns a builder for `Error` logs
+
+* Error logs always contain a "status" field with the value "error" and an "error" field using the error provided
+
+=== `NewErrorMessage(funcName string, err error, message string)`
+returns a builder for `Error` logs.
+
+* similar to `NewError()` except that the "error" field is composed as "{message}: {error}".
+
+== log builder functions
+
+=== `WithStatus(status LogValue)`
+adds a "status" field to the log message with the provided status value
+
+=== `WithResource(name resweave.ResourceName)`
+adds a "resource" field to the log message with the provided name
+
+This is provided as a convenience; your resource's LogHolder should have been instantiated using
+your resource name already, so that information should appear in the log.
+
+=== `WithError(err error)`
+adds:
+
+* a "status" field to the log message with the value "error"
+* an "error" field with the value provided.
+
+=== `WithErrorMessage(err error, message string)`
+adds:
+
+* a "status" field to the log message with the value "error"
+* an "error" field with the values provided, using the format "{message}: {error}".
+
+=== `With(name LogKey, value LogValue)`
+adds an arbitrary name/value pair to the log message.
+
+=== Log()
+indicates that the message has been composed, and logs it.
+
+== Examples
+
+Simple Info and error logging from within an `EasyResource` implementation:
+[source,go]
+----
+func (r *myResource) Create(context.Context, response.Writer, *http.Request) {
+    NewInfo("Create", LogStatusStarted).Log()
+    defer NewInfo("Create", LogStatusCompleted).Log()
+
+    if err := r.TrySomethingDifficult(); err != nil {
+        NewError("Create", err).Log()
+    }
+    if err = r.TrySomethingElse(); err != nil {
+        NewErrorMessage("Create", err, "failed to do the more difficult thing").Log()
+    }
+}
+----
+
+You can also add your own custom information to all your logs:
+[source,go]
+----
+    NewInfo("Example", LogStatusStarted).With("foo", "bar").Log()
+    NewError("Example", errors.New("foo")).WithResource("myname").Log()
+    NewError("Example", errors.New("foo")).WithResource("myname").With("special", "data").Log()
+
+    // it can be split across multiple lines for readability:
+    NewError("Example", errors.New("foo")).
+        WithResource("myname").
+        With("special", "data").
+        With("even", "more data").
+        Log()
+----
