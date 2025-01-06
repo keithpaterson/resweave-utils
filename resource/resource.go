@@ -5,9 +5,11 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/keithpaterson/resweave-utils/logging"
 	"github.com/keithpaterson/resweave-utils/response"
 	"github.com/keithpaterson/resweave-utils/utility/rw"
 	"github.com/mortedecai/resweave"
+	"go.uber.org/zap"
 )
 
 // Some common errors that resource objects should be using
@@ -46,28 +48,27 @@ func ToServiceError(err error) response.ServiceError {
 // Fetch, Delete, and Update require an id (as a string) and are expected to validate the id
 type EasyResource interface {
 	resweave.LogHolder
-
-	// These behave the same as the resweave.APIResource functions.
-	Name() resweave.ResourceName
-	SetID(id resweave.ID) error
-	GetIDValue(ctx context.Context) (string, error)
-
-	// Registers an Easy resource with the resweave server.
-	AddEasyResource(s resweave.Server) error
 }
 
 type EasyResourceHandler struct {
 	resweave.LogHolder
+	logging.LogFactory
 	api resweave.APIResource
 
-	resource        interface{} // the object implementing Create, List, etc.
+	resource        EasyResource // the object implementing Create, List, etc.
 	acceptedMethods acceptedMethodsMap
 	validations     validationFuncMap
 }
 
-func NewResource(name resweave.ResourceName, resource interface{}) *EasyResourceHandler {
+func NewResource(name resweave.ResourceName, resource EasyResource) *EasyResourceHandler {
+	lh := resweave.NewLogholder(name.String(), func(logger *zap.SugaredLogger) {
+		if resource != nil {
+			resource.SetLogger(logger, false)
+		}
+	})
 	erh := &EasyResourceHandler{
-		LogHolder:       resweave.NewLogholder(name.String(), nil),
+		LogHolder:       lh,
+		LogFactory:      logging.LogFactory{LogHolder: lh},
 		api:             resweave.NewAPI(name),
 		resource:        resource,
 		acceptedMethods: make(acceptedMethodsMap),
@@ -77,9 +78,7 @@ func NewResource(name resweave.ResourceName, resource interface{}) *EasyResource
 		erh.setAcceptedMethods(id, nil)
 	}
 
-	if lh, ok := resource.(resweave.LogHolder); ok {
-		lh.SetLogger(erh.Logger(), false)
-	}
+	lh.SetLogger(erh.Logger(), false)
 
 	erh.api.SetHandler(erh.handleResourceAction)
 
@@ -182,8 +181,8 @@ func (erh EasyResourceHandler) setAcceptedMethods(at resweave.ActionType, accept
 
 func (erh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	funcName := "handleResourceAction"
-	erh.Infow(funcName, "Status", "Starting")
-	defer erh.Infow(funcName, "Status", "Completed")
+	erh.NewInfo(funcName, "Starting").Log()
+	defer erh.NewInfo(funcName, "Completed").Log()
 
 	// make a writer
 	writer := response.NewWriter(w)
@@ -201,8 +200,8 @@ func (erh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx 
 	}
 
 	// Since we prevalidated whether the function is implemented we know we can call it based on the value of at
-	erh.Infow(at.String(), "Status", "Starting")
-	defer erh.Infow(at.String(), "Status", "Completed")
+	erh.NewInfo(at.String(), "Starting").Log()
+	defer erh.NewInfo(at.String(), "Completed").Log()
 
 	// try to call non-id methods first:
 	switch at {
@@ -235,14 +234,15 @@ func (erh EasyResourceHandler) handleResourceAction(at resweave.ActionType, ctx 
 
 func (erh EasyResourceHandler) standardValidations(at resweave.ActionType, r *http.Request) (int, response.ServiceError) {
 	// for now we don't need context or writer, but as we add more common validations we can add them in
+	funcName := "standardValidations"
 
 	if !erh.validateActionImplemented(at) {
-		erh.Errorw("standardValidations", "action", erh.api.Name().String(), "reason", "not-implemented")
+		erh.NewError(funcName, errors.New("not implemented")).With("action", erh.api.Name()).Log()
 		return http.StatusMethodNotAllowed, response.SvcErrorNoRegisteredMethod
 	}
 
 	if !erh.validateAcceptedMethods(at, r.Method) {
-		erh.Errorw("standardValidations", "resource", erh.api.Name().String(), "bad-method", r.Method, "accepted-methods", acceptedMethods[at])
+		erh.NewErrorMessage(funcName, errors.New("bad method"), r.Method).WithResource(erh.api.Name()).With("Accepted Methods", acceptedMethods[at]).Log()
 		return http.StatusMethodNotAllowed, response.SvcErrorInvalidMethod.WithDetail(r.Method)
 	}
 

@@ -22,37 +22,40 @@ type callRecord struct {
 	id     string
 }
 type testEasyResource struct {
+	resweave.LogHolder
+
 	// updated when methods are called.
 	calls []callRecord
 }
 
 func newTestEasyResource() *EasyResourceHandler {
-	tar := &testEasyResource{
-		calls: make([]callRecord, 0),
+	ter := &testEasyResource{
+		LogHolder: resweave.NewLogholder("test", nil),
+		calls:     make([]callRecord, 0),
 	}
 
-	return NewResource("test", tar)
+	return NewResource("test", ter)
 }
 
 // make action handlers that don't really do anything
-func (tar *testEasyResource) Create(_ context.Context, writer response.Writer, req *http.Request) {
-	tar.calls = append(tar.calls, callRecord{at: resweave.Create, method: req.Method})
+func (ter *testEasyResource) Create(_ context.Context, writer response.Writer, req *http.Request) {
+	ter.calls = append(ter.calls, callRecord{at: resweave.Create, method: req.Method})
 	writer.WriteResponse(http.StatusOK)
 }
-func (tar *testEasyResource) List(_ context.Context, writer response.Writer, req *http.Request) {
-	tar.calls = append(tar.calls, callRecord{at: resweave.List, method: req.Method})
+func (ter *testEasyResource) List(_ context.Context, writer response.Writer, req *http.Request) {
+	ter.calls = append(ter.calls, callRecord{at: resweave.List, method: req.Method})
 	writer.WriteResponse(http.StatusOK)
 }
-func (tar *testEasyResource) Fetch(id string, _ context.Context, writer response.Writer, req *http.Request) {
-	tar.calls = append(tar.calls, callRecord{at: resweave.Fetch, method: req.Method, id: id})
+func (ter *testEasyResource) Fetch(id string, _ context.Context, writer response.Writer, req *http.Request) {
+	ter.calls = append(ter.calls, callRecord{at: resweave.Fetch, method: req.Method, id: id})
 	writer.WriteResponse(http.StatusOK)
 }
-func (tar *testEasyResource) Delete(id string, _ context.Context, writer response.Writer, req *http.Request) {
-	tar.calls = append(tar.calls, callRecord{at: resweave.Delete, method: req.Method, id: id})
+func (ter *testEasyResource) Delete(id string, _ context.Context, writer response.Writer, req *http.Request) {
+	ter.calls = append(ter.calls, callRecord{at: resweave.Delete, method: req.Method, id: id})
 	writer.WriteResponse(http.StatusOK)
 }
-func (tar *testEasyResource) Update(id string, _ context.Context, writer response.Writer, req *http.Request) {
-	tar.calls = append(tar.calls, callRecord{at: resweave.Update, method: req.Method, id: id})
+func (ter *testEasyResource) Update(id string, _ context.Context, writer response.Writer, req *http.Request) {
+	ter.calls = append(ter.calls, callRecord{at: resweave.Update, method: req.Method, id: id})
 	writer.WriteResponse(http.StatusOK)
 }
 
