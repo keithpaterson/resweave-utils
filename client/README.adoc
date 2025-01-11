@@ -109,7 +109,7 @@ Retry handlers are used by the HTTP client whenever a `client.Execute(...)` requ
 There is only one retry implementation provided which will count attempts until a maximum threshold is
 reached after which the client will report the `client.ErrRequestTimeout` error.
 
-You may implement your own Retry Handler based on the `client.Retry` interface spec.
+You may implement your own Retry Handler based on the `client.RetryHandler` interface spec.
 
 Examples:
 [source,go]

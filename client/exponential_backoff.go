@@ -15,7 +15,7 @@ type exponentialBackoffSettings struct {
 	maxTimeout      time.Duration
 }
 
-type ExponentialBackoff struct {
+type exponentialBackoff struct {
 	settings   exponentialBackoffSettings
 	timeout    time.Duration
 	multiplier int
@@ -23,7 +23,7 @@ type ExponentialBackoff struct {
 	ticker *time.Ticker
 }
 
-func NewExponentialBackoff(startTimeout time.Duration, maxTimeout time.Duration, multiplier int) *ExponentialBackoff {
+func NewExponentialBackoff(startTimeout time.Duration, maxTimeout time.Duration, multiplier int) *exponentialBackoff {
 	// TODO(kwpaterson): add info logs when we override input values
 	if multiplier < 1 {
 		multiplier = 1
@@ -31,7 +31,7 @@ func NewExponentialBackoff(startTimeout time.Duration, maxTimeout time.Duration,
 	if maxTimeout < startTimeout {
 		maxTimeout = startTimeout
 	}
-	return &ExponentialBackoff{
+	return &exponentialBackoff{
 		settings: exponentialBackoffSettings{
 			startingTimeout: startTimeout,
 			maxTimeout:      maxTimeout,
@@ -42,16 +42,16 @@ func NewExponentialBackoff(startTimeout time.Duration, maxTimeout time.Duration,
 	}
 }
 
-func (b *ExponentialBackoff) Reset() {
+func (b *exponentialBackoff) Reset() {
 	b.timeout = b.settings.startingTimeout
 	b.multiplier = b.settings.baseMultiplier
 }
 
-func (b *ExponentialBackoff) Timeout() time.Duration {
+func (b *exponentialBackoff) Timeout() time.Duration {
 	return b.timeout
 }
 
-func (b *ExponentialBackoff) Advance() time.Duration {
+func (b *exponentialBackoff) Advance() time.Duration {
 	b.Stop()
 
 	timeout := time.Duration(b.multiplier) * b.settings.startingTimeout
@@ -64,13 +64,13 @@ func (b *ExponentialBackoff) Advance() time.Duration {
 	return b.timeout
 }
 
-func (b *ExponentialBackoff) Start() <-chan time.Time {
+func (b *exponentialBackoff) Start() <-chan time.Time {
 	b.Stop()
 	b.ticker = time.NewTicker(b.timeout)
 	return b.ticker.C
 }
 
-func (b *ExponentialBackoff) Stop() {
+func (b *exponentialBackoff) Stop() {
 	if b.ticker != nil {
 		b.ticker.Stop()
 		b.ticker = nil

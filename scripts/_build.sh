@@ -10,12 +10,20 @@ run_build() {
   local _op=$1
   shift
   case ${_op} in
+    -h|--help)
+      run_handler_usage build
+      exit 1
+      ;;
     "")
       echo "Build ..."
       go build ./... $*
       ;;
-    "test")
+    generate)
+      _run test generate $*
+      ;;
+    test)
       echo "Build for test ..."
+      _run test generate
       go build -tags testutils ./... $*
       ;;
     *)

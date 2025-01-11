@@ -54,5 +54,4 @@ req := NewPostRequest("http://test.org/foo", WtihJsonBody(foo))
 Similar to `WithJsonBody()` except that the data is provied as a byte slice and the MIME type will be set to "application/octet-stream"
 
 === WithCustomBody()
-Identital to `WithBinaryBody()` except that the caller specifies the MIME type.  This is useful for any custom blob-like formats such as
-images.
+Identital to `WithBinaryBody()` except that the caller specifies the MIME type.  This is useful for any custom blob-like formats such as images.

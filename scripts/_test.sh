@@ -69,6 +69,7 @@ _unit_coverage() {
 }
 
 _generate_mocks() {
+  echo "Generating mocks ..."
   go generate $* ./...
 }
 

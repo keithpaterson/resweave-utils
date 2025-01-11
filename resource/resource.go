@@ -18,6 +18,8 @@ var (
 	ErrNoSuchResource = errors.New("no such resource")
 )
 
+// ToServiceError converts an error type to a [response.ServiceError] that can be
+// returned in your HTTP response.
 func ToServiceError(err error) response.ServiceError {
 	// Brute-force but a lookup table and Unwrap wasn't working so ...
 	if errors.Is(err, rw.ErrorNoData) {
@@ -33,6 +35,8 @@ func ToServiceError(err error) response.ServiceError {
 	return response.SvcErrorReadRequestFailed.WithError(err)
 }
 
+// tag::easyresource[]
+
 // Easy Resources must implement a subset of these functions in order to be valid:
 //
 //	Create(context.Context, response.Writer, *http.Request)
@@ -44,22 +48,19 @@ func ToServiceError(err error) response.ServiceError {
 // If any method is not implemented the resource's action handler will automatically
 // return an error response indicating that the action is invalid.
 //
-// Create and List do not require an id
-// Fetch, Delete, and Update require an id (as a string) and are expected to validate the id
+// Create and List do not require an id.
+//
+// Fetch, Delete, and Update require an id (as a string) and are expected to validate the id.
 type EasyResource interface {
 	resweave.LogHolder
 }
 
-type EasyResourceHandler struct {
-	resweave.LogHolder
-	logging.LogFactory
-	api resweave.APIResource
+// end::easyresource[]
 
-	resource        EasyResource // the object implementing Create, List, etc.
-	acceptedMethods acceptedMethodsMap
-	validations     validationFuncMap
-}
-
+// Instantiates a resource handler that can be registered with the resweave.Service.
+//
+// When RESTful requests are received via the service, the handler takes care of calling
+// your REST functions as appropriate.
 func NewResource(name resweave.ResourceName, resource EasyResource) *EasyResourceHandler {
 	lh := resweave.NewLogholder(name.String(), func(logger *zap.SugaredLogger) {
 		if resource != nil {
@@ -83,6 +84,16 @@ func NewResource(name resweave.ResourceName, resource EasyResource) *EasyResourc
 	erh.api.SetHandler(erh.handleResourceAction)
 
 	return erh
+}
+
+type EasyResourceHandler struct {
+	resweave.LogHolder
+	logging.LogFactory
+	api resweave.APIResource
+
+	resource        EasyResource // the object implementing Create, List, etc.
+	acceptedMethods acceptedMethodsMap
+	validations     validationFuncMap
 }
 
 // resweave.APIResource functions that I am exposing as our own
@@ -121,6 +132,7 @@ type easyUpdater interface {
 	Update(id string, ctx context.Context, writer response.Writer, req *http.Request)
 }
 
+// Registers a resource handler created using [NewResource] with the resweave server.
 func (erh EasyResourceHandler) AddEasyResource(s resweave.Server) error {
 	if s == nil {
 		return ErrNilServer
@@ -132,7 +144,7 @@ func (erh EasyResourceHandler) AddEasyResource(s resweave.Server) error {
 //
 // You can limit updates to one or the other using this method.
 //
-// If you do not want to support update at all , use `erh.SetUpdate(nil)`.
+// If you do not want to support update at all, do not implement an Update function for your resource`.
 //
 // If you pass (false, false) here nothing will be changed
 func (erh EasyResourceHandler) SetUpdateAcceptedMethods(acceptPut bool, acceptPatch bool) {
