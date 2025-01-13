@@ -30,7 +30,7 @@ jobs:
 
       - name: Run Unit Tests
         run: |
-          go install github.com/golang/mock/mockgen
+          go install go.uber.org/mock/mockgen@latest
           ./pkg test
 
       - name: Run Unit Tests with Coverage
