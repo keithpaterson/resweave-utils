@@ -29,7 +29,9 @@ jobs:
           go-version: "${{env.USE_GOVERSION}}"
 
       - name: Run Unit Tests
-        run: ./pkg test
+        run: |
+          go install github.com/golang/mock/mockgen
+          ./pkg test
 
       - name: Run Unit Tests with Coverage
         run: |
