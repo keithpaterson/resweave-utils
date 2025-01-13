@@ -28,6 +28,11 @@ type httpClient struct {
 	retryHandler RetryHandler
 }
 
+// Default implementation for an HTTP client which:
+//   - Uses the default backoff timer (exponential: 30s initial, doubled, 4m max)
+//   - Uses the default retry handler (3 retries)
+//
+// This implementation uses a cancelable context.
 func DefaultHTTPClient() *httpClient {
 	// If we can't instantiate a logger we shouldn't fail because the caller could
 	// add their own.
@@ -49,6 +54,9 @@ func DefaultHTTPClient() *httpClient {
 //
 // The name is primarily used in logging; ideally you would provide a name that identifies this
 // non-default instance of the client.
+//
+// This implementation uses a static backoff (using http.DefaultClient.Timeout) and a single retry,
+// and uses a cancelable context.
 func NewHTTPClient(name string) *httpClient {
 	// If we can't instantiate a logger we shouldn't fail because the caller could
 	// add their own.
@@ -88,6 +96,8 @@ func (c *httpClient) WithRetryHandler(retry RetryHandler) *httpClient {
 	return c
 }
 
+// Excutes an http request and handles any backoff/retry behaviour using the
+// configured objects.
 func (c *httpClient) Execute(req *http.Request) (*http.Response, error) {
 	if c.backoff != nil {
 		c.Client.Timeout = c.backoff.Timeout()

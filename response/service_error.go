@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Allow ServiceError to be passed anywhere an `error` type is accepted.
+// Allows ServiceError to be passed anywhere an `error` type is accepted.
 type ServiceError interface {
 	Error() string
 	Unwrap() error
@@ -43,8 +43,11 @@ var (
 // Examples:
 //
 //	SvcErrorWriteFailed.Error() = "10200: write response failed"
+//	SvcErrorWriteFailed.WithDetail("foo").Error() = "10200: write response failed: foo"
 //	SvcErrorWriteFailed.WithError(errors.New("foo barred")).Error() = "10200: write response failed: foo barred"
+//	SvcErrorWriteFailed.WithError(errors.New("foo barred")).WithDetail("mattress").Error() = "10200: write response failed: mattress: foo barred"
 //	SvcErrorWriteFailed.WithError(SvcErrorJsonMarshalFailed).Error() = "10200: write response failed: 10100: json marshal failed"
+//
 //	fmt.Errorf("%w: mattress", SvcErrorWriteFailed) = "10200: write response failed: mattress"
 func (e *SvcError) Error() string {
 	message := fmt.Sprintf("%d: %s", e.Code, e.Description)
@@ -67,10 +70,20 @@ func (e *SvcError) Is(target error) bool {
 	return e.Code == se.Code && strings.HasPrefix(e.Description, se.Description)
 }
 
+// appends additional text to the service error
+//
+// Example:
+//
+//	NewServiceError(1234, "service error").WithDetail("foo").Error() = "1234: service error: foo"
 func (e *SvcError) WithDetail(detail string) ServiceError {
 	return NewServiceError(e.Code, fmt.Sprintf("%s: %s", e.Description, detail))
 }
 
+// attaches an error to the service error.  This information is appended to the Detail message during Error()
+//
+// Example:
+//
+//	NewServiceError(1234, "service error").WthError(error.New("foo")).WithDetail("xxx").Error() = "1234: xxx: foo"
 func (e *SvcError) WithError(err error) ServiceError {
 	e.wrapped = err
 	return e

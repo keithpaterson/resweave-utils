@@ -1,3 +1,22 @@
+// This package provides helpers for quickly creating [*http.Request] objects that can
+// be excuted using the http client wrapper, or even the [*http.Client] object itself.
+//
+// # Examples:
+//
+// # Requests that do not require body data:
+//
+//	req, err := NewGetRequest("http://example.com")
+//	req, err := NewDeleteRequest("http://example.com/foo/1")
+//
+// # Requests that may contain body data:
+//
+//	type Foo struct {
+//	    Value int `json:"value"`
+//	}
+//	foo := Foo{123}
+//	req, err := NewPostRequest("http://example.com/foo", WithJsonBody(&foo))
+//	req, err := NewPutRequest("http://example.com/foo/1", WithBinaryBody([]byte{1, 2, 3, 4}))
+//	req, err := NewPostRequest("http://example.com/foo", WithNoBody())
 package request
 
 import (
@@ -10,7 +29,6 @@ import (
 	"github.com/keithpaterson/resweave-utils/header"
 )
 
-// Errors
 var (
 	ErrorMissingUri     = errors.New("missing uri")
 	ErrorMarshalingBody = errors.New("failed to marshal body")
@@ -20,12 +38,14 @@ type BodyDataProvider func() (data []byte, mimeType string, err error)
 
 // Body Data Providers
 
+// returns empty data and mime type, indicating that no body data is required
 func WithNoBody() BodyDataProvider {
 	return func() ([]byte, string, error) {
 		return nil, "", nil
 	}
 }
 
+// returns the object marshaled to json byte data and the json mime type
 func WithJsonBody(object interface{}) BodyDataProvider {
 	return func() ([]byte, string, error) {
 		var raw []byte
@@ -40,10 +60,12 @@ func WithJsonBody(object interface{}) BodyDataProvider {
 	}
 }
 
+// returns the raw object data as provided and the binary mime type
 func WithBinaryBody(data []byte) BodyDataProvider {
 	return WithCustomBody(data, header.MimeTypeBinary)
 }
 
+// returns the raw object data and mime type provided
 func WithCustomBody(data []byte, mimeType string) BodyDataProvider {
 	return func() ([]byte, string, error) {
 		return data, mimeType, nil

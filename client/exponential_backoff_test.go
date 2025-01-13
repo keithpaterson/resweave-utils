@@ -9,7 +9,7 @@ import (
 
 var _ = Describe("Exponential Backoff", func() {
 	DescribeTable("Timing Calculator",
-		func(backoff *ExponentialBackoff, timesCalled int, expected time.Duration) {
+		func(backoff *exponentialBackoff, timesCalled int, expected time.Duration) {
 			// Arrange && Act
 			for c := 0; c < timesCalled; c++ {
 				backoff.Advance()

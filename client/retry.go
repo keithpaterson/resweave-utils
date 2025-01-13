@@ -1,17 +1,19 @@
 package client
 
 type RetryHandler interface {
-	// returns false when we should stop trying
+	// reports whether we can try again.
 	SafeToRetry() bool
-	// advance the retry 'counter'
-	// returns false when we should stop trying
+	// advances to the next retry state (e.g. advances the counter)
+	// reports whether we can try again
 	Advance() bool
-	// resets the counter
+	// resets the handler to its starting state
 	Reset()
-	// returns some state information as a string; useful for adding to errors
+	// returns internal state information, e.g. "attempt x of y"
 	State() string
 }
 
+// returns the default retry handler:
+// fail after 3 retries.
 func DefaultRetryHandler() RetryHandler {
 	return NewRetryCounter(defaultMaxRetries)
 }

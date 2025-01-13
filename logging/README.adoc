@@ -10,16 +10,16 @@ This introduces the `LogKey` and `LogValue` types, which denote a logged key/val
 There are some built-in keys and values, but you can create your own as well:
 
 Keys:
-
-* `LogKeyStatus` = "status"
-* `LogKeyError` = "error"
-* `LogKeyResource` = "resource"
+[source,go]
+----
+include::log_builder.go[tag=loggingkeys]
+----
 
 Values:
-
-* `LogStatusStarted` = "started"
-* `LogStatusCompleted` = "completed"
-* `LogStatusError` = "error"
+[source,go]
+----
+include::log_builder.go[tag=loggingvalues]
+----
 
 Keep in mind that `resweave` uses the sugared `zap` logger, so log information is provided in JSON key/value pairs, so your Key values should be JSON-compatible.
 

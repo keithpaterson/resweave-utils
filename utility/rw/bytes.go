@@ -11,6 +11,9 @@ var (
 	ErrorReaderFailed = errors.New("failed to read from reader")
 )
 
+// Extracts raw data from the stream and returns it.
+//
+// error will be non-nil if the data could not be extracted.
 func ReadAll(reader io.Reader) ([]byte, error) {
 	if reader == nil {
 		return nil, ErrorNilReader

@@ -18,20 +18,23 @@ The test.HttpService will allow you respond with any status code and embed servi
 response so that you can test how your resource handler is dealing with good/bad responses.
 
 Keep in mind that this is intended to exercise the client side; using this will not evaluate the actual service
-logic; for that you will want to write integration tests that won't use this class.
+logic; for that you will want to write integration tests that won't use this struct.
 
 For example:
 
-Assume you have a FooClient that emits a Get request to fetch a specific `Foo` based on an ID.
+Assume you have a FooClient that emits a POST request to set the status of a `Foo`.
+(this is illustrative; there are simpler ways to do this sort of thing)
 [source,go]
 ----
-func (fr *FooClient) Fetch(_ context.Context, id int) (FooResponse, error) {
-    req := request.NewGetRequest(fr.host + "/foo/" + id)
+func (fc *FooClient) Activate(id int) (FooResponse, error) {
+    foo := Foo{ID: id}
+    req := request.NewPostRequest(fc.host + "/foo/" + id + "/activate", request.WithJsonBody(foo))
     httpClient := client.DefaultHTTPClient() // more likely this is a member but for clarity here it is.
     resp, err := httpClient.Execute(req)
     if err != nil {
         return nil, err
     }
+    defer resp.Body.Close()
 
     var respFoo FooResponse
     err = response.ParseResponseJsonData(resp, http.StatusOK, &respFoo)
@@ -42,13 +45,14 @@ func (fr *FooClient) Fetch(_ context.Context, id int) (FooResponse, error) {
 Your test code for the success case might look something like this:
 [source,go]
 ----
-var _ = Describe("Test Foo Resource", func() {
+var _ = Describe("Test Foo Client", func() {
     It("should return a FooResponse in the success case", func() {
-        foo := Foo{ID: 123, Name: "My Foo"}
+        // Arrange
+        foo := Foo{ID: 123}
         fooResp  := FooResponse{ID: 123, Name: "My Foo", Status: "active"}
         svc := test.HttpService().
-            WithMethod(http.MethodGet).
-            WithPath("/foo/123").
+            WithMethod(http.MethodPost).
+            WithPath("/foo/123/activate").
             WithJsonBody(foo).
             ReturnStatusCode(http.StatusOK).
             ReturnJsonBody(fooResp)
@@ -58,10 +62,13 @@ var _ = Describe("Test Foo Resource", func() {
         // Note that you'll need to be able to tell the FooResource instance what the host name is, because
         // the test service may use a different port for each test (so tests can run concurrently)
         fooClient := &FooClient{host: host, ...} // whatever init is required for the client object
-        resFoo, err := fooResource.Fetch(context.TODO(), 123)
 
+        // Act
+        resFoo, err := fooClient.Activate(123)
+
+        // Assert
         Expect(err).ToNot(HaveOccurred())
-        Expect(resFoo).To(Equal(&fooResp))
+        Expect(resFoo).To(Equal(fooResp))
     })
 })
 ----
