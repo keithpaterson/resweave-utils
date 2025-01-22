@@ -17,6 +17,11 @@ var (
 	ErrRequestTimeout   = errors.New("request timed out")
 )
 
+type HttpClient interface {
+	Execute(req *http.Request) (*http.Response, error)
+	Cancel() error
+}
+
 // wrapper around net/http/Client
 type httpClient struct {
 	Client *http.Client
