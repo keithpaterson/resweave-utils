@@ -1,4 +1,4 @@
-// Package resweave_utils provides utility functions and classes that are designed to
+// Package resweave-utils provides utility functions and classes that are designed to
 // be used in conjunction with the [mortedecai/resweave] package.
 package resweave_utils
 

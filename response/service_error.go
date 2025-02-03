@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Allows ServiceError to be passed anywhere an `error` type is accepted.
+// ServiceError provides an API that allows a ServiceError to be passed anywhere an `error` type is accepted.
 type ServiceError interface {
 	Error() string
 	Unwrap() error
@@ -38,7 +38,7 @@ var (
 	SvcErrorResourceIdMismatch  = NewServiceError(10501, "resource id mismatch")
 )
 
-// Allow ServiceError to be passed anywhere an `error` type is accepted.
+// Error() returns the error message.
 //
 // Examples:
 //
@@ -70,7 +70,7 @@ func (e *SvcError) Is(target error) bool {
 	return e.Code == se.Code && strings.HasPrefix(e.Description, se.Description)
 }
 
-// appends additional text to the service error
+// WithDetail appends additional text to the service error
 //
 // Example:
 //
@@ -79,7 +79,7 @@ func (e *SvcError) WithDetail(detail string) ServiceError {
 	return NewServiceError(e.Code, fmt.Sprintf("%s: %s", e.Description, detail))
 }
 
-// attaches an error to the service error.  This information is appended to the Detail message during Error()
+// WithError attaches an error to the service error.  This information is appended to the Detail message during Error()
 //
 // Example:
 //

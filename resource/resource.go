@@ -37,7 +37,9 @@ func ToServiceError(err error) response.ServiceError {
 
 // tag::easyresource[]
 
-// Easy Resources must implement a subset of these functions in order to be valid:
+// EasyResource provids an API for resources that are compatible with resweave.
+//
+// EasyResource implementations must provide a subset of these functions in order to be valid:
 //
 //	Create(context.Context, response.Writer, *http.Request)
 //	List(context.Context, response.Writer, *http.Request)
@@ -57,7 +59,7 @@ type EasyResource interface {
 
 // end::easyresource[]
 
-// Instantiates a resource handler that can be registered with the resweave.Service.
+// NewResource returns a resource handler that can be registered with the resweave.Service.
 //
 // When RESTful requests are received via the service, the handler takes care of calling
 // your REST functions as appropriate.
@@ -140,11 +142,14 @@ func (erh EasyResourceHandler) AddEasyResource(s resweave.Server) error {
 	return s.AddResource(erh.api)
 }
 
-// By default an Update can be either Put or Patch; both are supported.
+// SetUpdateAcceptedMethods allows resource implementations to decide if they want to
+// support Put or Patch (or both) for Update operations.
+// By default both are supported.
 //
-// You can limit updates to one or the other using this method.
+// If the resource receives a Put or Patch method when it has been disabled, an error will
+// automatically be returned for that request.
 //
-// If you do not want to support update at all, do not implement an Update function for your resource`.
+// If you do not want to support Update at all, do not implement an Update function for your resource.
 //
 // If you pass (false, false) here nothing will be changed
 func (erh EasyResourceHandler) SetUpdateAcceptedMethods(acceptPut bool, acceptPatch bool) {

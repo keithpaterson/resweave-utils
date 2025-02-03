@@ -1,4 +1,4 @@
-// This package provides an HTTP client implementation that can be easily configured with
+// package client provides an HTTP client implementation that can be easily configured with
 // timeout and retry behaviour.
 //
 // # Client

@@ -1,18 +1,19 @@
 package client
 
+// Retry provides the API for HTTP clients to handle automatic retries during requests
 type RetryHandler interface {
-	// reports whether we can try again.
+	// SafeToRetry reports whether we can try again.
 	SafeToRetry() bool
-	// advances to the next retry state (e.g. advances the counter)
+	// Advance advances to the next retry state (e.g. advances the counter), and
 	// reports whether we can try again
 	Advance() bool
-	// resets the handler to its starting state
+	// Reset resets the handler to its starting state
 	Reset()
-	// returns internal state information, e.g. "attempt x of y"
+	// State returns internal state information, e.g. "attempt x of y"
 	State() string
 }
 
-// returns the default retry handler:
+// DefaultRetryHandler returns the default retry handler:
 // fail after 3 retries.
 func DefaultRetryHandler() RetryHandler {
 	return NewRetryCounter(defaultMaxRetries)

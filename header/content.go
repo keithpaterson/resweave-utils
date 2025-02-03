@@ -1,4 +1,4 @@
-// defines some commonly-used HTTP header keys and values
+// Package header defines some commonly-used HTTP header keys and values
 package header
 
 // commonly used headers

@@ -15,7 +15,7 @@ var (
 	ErrorNonstandardResponse      = errors.New("non-standard response data")
 )
 
-// Parse a simple response with no data.
+// ParsResponse parses a simple response with no data.
 //
 //   - If the response status code != the expected success code then an error is returned.
 //   - If the response contains a service error, it is converted to error and returned.
@@ -31,7 +31,7 @@ func ParseResponse(resp *http.Response, successStatusCode int) error {
 	return nil
 }
 
-// Parse a response containing json data or an error
+// ParseResponseJsonData parses a response containing json data or an error
 //
 // If the response status code == the expected success code, then the response body is
 // unmarshaled into the object provided and a nil error is returned.
@@ -46,7 +46,7 @@ func ParseResponseJsonData(resp *http.Response, successStatusCode int, object in
 	return parseJsonData(resp.Body, object)
 }
 
-// Parse a response containing non-json data bytes or an error
+// ParseResponseBinaryData parses a response containing non-json data bytes or an error
 //
 // If the response status code == the expected success code, the response body is
 // extracted as []bytes and returned with a nil error.

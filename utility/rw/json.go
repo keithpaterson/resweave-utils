@@ -12,7 +12,7 @@ var (
 	ErrorJsonUnmarshalFailed = errors.New("failed to unmarshal json data")
 )
 
-// Extracts data from the reader and Unmarshals it into the object.
+// UnmarshalJson extracts data from the reader and unmarshals it into the object.
 //
 // error will be non-nil if the data could not be read or Unmarshaled.
 func UnmarshalJson(reader io.Reader, object interface{}) error {

@@ -53,6 +53,8 @@ func (s *httpService) WithBody(body interface{}) *httpService {
 	return s.WithJsonBody(body)
 }
 
+// WithTimeouts configures the service to timeout a predetermined number of requests.
+//
 // The first (count) requests will hold until released; this will induce the client to
 // time out.
 //
@@ -125,9 +127,10 @@ func (s *httpService) GetCallCount() int {
 	return s.callCounter
 }
 
-// Post-execution: clear a timeout
+// ReleaseTimeoutHold will clear an active timeout.
+//
 // If you are testing with intentional timeouts, this clears the timeout hold
-// So that you can run the next test
+// So that you can run the next test.
 //
 // The service tearDown function will call this automatically
 func (s *httpService) ReleaseTimeoutHold() {
@@ -138,7 +141,9 @@ func (s *httpService) ReleaseTimeoutHold() {
 	}
 }
 
+// Start instantiates a new test server and
 // returns the host url ("http://localhost:port") and a function you use to tear down the service
+// when your testing is completed.
 //
 // e.g.
 //

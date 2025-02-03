@@ -16,12 +16,13 @@ func NewWriter(w http.ResponseWriter) Writer {
 	return Writer{writer: w}
 }
 
-// Generate a simple response containing only the status code.
+// WriteResponse generates a simple response with only the status code and no body.
 func (w Writer) WriteResponse(statusCode int) {
 	w.writer.WriteHeader(statusCode)
 }
 
-// Generate a response containing the status code and the object as json data.
+// WriteJsonResponse generates a response with the status code
+// and a body containing the object as json data.
 //
 // The Mime type header is automatically set to "application/json".
 func (w Writer) WriteJsonResponse(statusCode int, object interface{}) error {
@@ -33,9 +34,12 @@ func (w Writer) WriteJsonResponse(statusCode int, object interface{}) error {
 	return w.WriteDataResponse(statusCode, raw, header.MimeTypeJson)
 }
 
-// Generates a response containing the status code and the object.  Mime type must also be specified.
+// WriteDataResponse generates a response with the status code and
+// a body containing the object data.
 //
-// The object is added to the respoonse body as-is, and the Mime type header is set to the provided value.
+// The Mime type header with be set to the value provided.
+//
+// The object is added to the respoonse body as-is.
 func (w Writer) WriteDataResponse(statusCode int, data []byte, mimeType string) error {
 	w.writer.WriteHeader(statusCode)
 
@@ -55,7 +59,8 @@ func (w Writer) WriteDataResponse(statusCode int, data []byte, mimeType string) 
 	return nil
 }
 
-// Generate a response containing an error status code with the service error as the body.
+// WriteErrorResponse generate a response with an error status code and
+// a body containing the service error.
 func (w Writer) WriteErrorResponse(statusCode int, svcErr ServiceError) error {
 	w.writer.WriteHeader(statusCode)
 

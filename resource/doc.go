@@ -1,5 +1,5 @@
 /*
-This package simplifies the implementation of a [mortecai/reswave] compatible resource.
+Pcakge resource simplifies the implementation of a [mortecai/reswave] compatible resource.
 
 Example:
 
