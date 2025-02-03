@@ -93,7 +93,7 @@ var _ = Describe("LogBuilder", func() {
 			holder = resweave.NewLogholder("test", nil)
 		})
 
-		type testFunc func(b *logBuilder)
+		type testFunc func(b *LogBuilder)
 
 		DescribeTable("builder functions",
 			func(logType logType, testFn testFunc, expectedContext map[string]interface{}) {
@@ -112,35 +112,35 @@ var _ = Describe("LogBuilder", func() {
 				Expect(entry.ContextMap()).To(Equal(expectedContext))
 			},
 			Entry("info with status", logTypeInfo,
-				func(b *logBuilder) { b.WithStatus("logged") },
+				func(b *LogBuilder) { b.WithStatus("logged") },
 				map[string]interface{}{LogKeyStatus: "logged"}),
 			Entry("info with status and custom value", logTypeInfo,
-				func(b *logBuilder) { b.WithStatus("logged").With("key", "value") },
+				func(b *LogBuilder) { b.WithStatus("logged").With("key", "value") },
 				map[string]interface{}{LogKeyStatus: "logged", "key": "value"}),
 			Entry("info with custom value", logTypeInfo,
-				func(b *logBuilder) { b.With("key", "value") },
+				func(b *LogBuilder) { b.With("key", "value") },
 				map[string]interface{}{"key": "value"}),
 
 			Entry("info with multiple custom value", logTypeInfo,
-				func(b *logBuilder) { b.With("key", "value").With("another", "value") },
+				func(b *LogBuilder) { b.With("key", "value").With("another", "value") },
 				map[string]interface{}{"key": "value", "another": "value"}),
 			Entry("error with error", logTypeInfo,
-				func(b *logBuilder) { b.WithError(errors.New("failed")) },
+				func(b *LogBuilder) { b.WithError(errors.New("failed")) },
 				map[string]interface{}{LogKeyError: "failed"}),
 			Entry("error with error and resource", logTypeInfo,
-				func(b *logBuilder) { b.WithError(errors.New("failed")).WithResource("foo-resource") },
+				func(b *LogBuilder) { b.WithError(errors.New("failed")).WithResource("foo-resource") },
 				map[string]interface{}{LogKeyError: "failed", LogKeyResource: "foo-resource"}),
 			Entry("error with error message", logTypeInfo,
-				func(b *logBuilder) { b.WithErrorMessage(errors.New("failed"), "tried") },
+				func(b *LogBuilder) { b.WithErrorMessage(errors.New("failed"), "tried") },
 				map[string]interface{}{LogKeyError: "tried: failed"}),
 			Entry("error with error and custom value", logTypeInfo,
-				func(b *logBuilder) { b.WithError(errors.New("failed")).With("attempt", 1) },
+				func(b *LogBuilder) { b.WithError(errors.New("failed")).With("attempt", 1) },
 				map[string]interface{}{LogKeyError: "failed", "attempt": int64(1)}),
 			Entry("incorrect type logs an error", logType(-1),
-				func(b *logBuilder) { /* no extra logs */ },
+				func(b *LogBuilder) { /* no extra logs */ },
 				map[string]interface{}{logKeyLogFault: "unsupported log type"}),
 			Entry("incorrect type with custom values logs an error", logType(-1),
-				func(b *logBuilder) { b.WithStatus("pooched").WithResource("foo-res").With("not", "unusual") },
+				func(b *LogBuilder) { b.WithStatus("pooched").WithResource("foo-res").With("not", "unusual") },
 				map[string]interface{}{logKeyLogFault: "unsupported log type", LogKeyStatus: "pooched", LogKeyResource: "foo-res", "not": "unusual"}),
 		)
 	})

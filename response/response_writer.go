@@ -7,6 +7,7 @@ import (
 	"github.com/keithpaterson/resweave-utils/header"
 )
 
+// Helper for generating http responses
 type Writer struct {
 	writer http.ResponseWriter
 }
@@ -15,10 +16,15 @@ func NewWriter(w http.ResponseWriter) Writer {
 	return Writer{writer: w}
 }
 
+// WriteResponse generates a simple response with only the status code and no body.
 func (w Writer) WriteResponse(statusCode int) {
 	w.writer.WriteHeader(statusCode)
 }
 
+// WriteJsonResponse generates a response with the status code
+// and a body containing the object as json data.
+//
+// The Mime type header is automatically set to "application/json".
 func (w Writer) WriteJsonResponse(statusCode int, object interface{}) error {
 	raw, err := json.Marshal(object)
 	if err != nil {
@@ -28,6 +34,12 @@ func (w Writer) WriteJsonResponse(statusCode int, object interface{}) error {
 	return w.WriteDataResponse(statusCode, raw, header.MimeTypeJson)
 }
 
+// WriteDataResponse generates a response with the status code and
+// a body containing the object data.
+//
+// The Mime type header with be set to the value provided.
+//
+// The object is added to the respoonse body as-is.
 func (w Writer) WriteDataResponse(statusCode int, data []byte, mimeType string) error {
 	w.writer.WriteHeader(statusCode)
 
@@ -47,6 +59,8 @@ func (w Writer) WriteDataResponse(statusCode int, data []byte, mimeType string) 
 	return nil
 }
 
+// WriteErrorResponse generate a response with an error status code and
+// a body containing the service error.
 func (w Writer) WriteErrorResponse(statusCode int, svcErr ServiceError) error {
 	w.writer.WriteHeader(statusCode)
 

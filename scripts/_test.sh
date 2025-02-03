@@ -69,6 +69,8 @@ _unit_coverage() {
 }
 
 _generate_mocks() {
+  echo "Generating mocks ..."
+  [ -d mocks ] || mkdir mocks
   go generate $* ./...
 }
 

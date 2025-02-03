@@ -24,3 +24,5 @@ bin/
 
 .bash_tools/
 .kwp*
+mocks/
+

@@ -2,25 +2,32 @@ package client
 
 import "time"
 
-// initial backoff implementation
+// Backoff provides the API for HTTP clients to handle incremental backoff during requests.
 type Backoff interface {
-	// reset the timer to it's starting state
+	// Reset resets the timer to it's starting state
 	Reset()
-	// return the current backoff timeout value
+	// Timeout returns the current backoff timeout value
 	Timeout() time.Duration
-	// Advance the backoff timeout value and return the result.
-	// if the timeout has reached it's upper limit, it will no longer be advanced
+	// Advance advances the backoff timeout value and returns the new value.
+	//
+	// If the timeout has reached it's upper limit, expect this to return the current value.
 	Advance() time.Duration
-	// start a timer using the current timeout.  returns a channel that you can select{} on
+	// Start begins a timer using the current timeout and returns a receiving channel that
+	// will send the current time when the timer expires.
 	Start() <-chan time.Time
-	// stop a running timer
+	// Stop terminates a running timer.
 	Stop()
 }
 
+// DefaultBackoff returns the default backoff timer:
+// exponential(initial=30s, max=4m, double on advance).
 func DefaultBackoff() Backoff {
 	return NewExponentialBackoff(exponentialStart, exponentialMax, exponentialMultiplier)
 }
 
+// StaticBackoff returns a backoff timer that always uses the specified delay
+//
+// This can also be expressed as: exponential(initial=delay, max=delay, multiply-by-one on advance)
 func StaticBackoff(delay time.Duration) Backoff {
 	return NewExponentialBackoff(delay, delay, 1)
 }
