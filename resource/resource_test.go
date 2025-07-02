@@ -330,6 +330,7 @@ var _ = Describe("Test EasyResource", func() {
 	Context("resweave Service Integration", func() {
 		var (
 			srv      resweave.Server
+			host     resweave.Host
 			recorder *httptest.ResponseRecorder
 			res      *EasyResourceHandler
 
@@ -337,6 +338,8 @@ var _ = Describe("Test EasyResource", func() {
 		)
 		BeforeEach(func() {
 			srv = resweave.NewServer(port)
+			// Retrieve the default host from the server
+			host, _ = srv.GetHost(resweave.HostName(""))
 			recorder = httptest.NewRecorder()
 
 			res = newTestEasyResource()
@@ -354,7 +357,9 @@ var _ = Describe("Test EasyResource", func() {
 
 				// Act
 				res.AddEasyResource(srv)
-				srv.Serve(recorder, req)
+				// Note: The srv.serve(...) function only derives the host and then calls this method; removal of server.Serve from the interface
+				//       requires adjusting to call host.Serve instead.
+				host.Serve(recorder, req)
 
 				// Assert
 				Expect(res.resource.(*testEasyResource).calls).To(Equal([]callRecord{{at: action, method: method, id: id}}))
